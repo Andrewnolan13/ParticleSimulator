@@ -6,6 +6,7 @@ class Body:
     __slots__ = ['_rx', '_ry', '_vx', '_vy', '_mass', '_color', '_fx', '_fy', 'radius']
     G:float = 6.67430e-11
     color:tuple[int] = (0,0,0)
+    elastic:float = 1.0
     def __init__(self, rx:float,ry:float,vx:float, vy:float,mass:float,color:tuple[int]):
         self._mass = mass
         self._rx = rx
@@ -59,9 +60,6 @@ class Body:
         self._fx += F * dx / dist
         self._fy += F * dy / dist
 
-    def draw(self, screen:pygame.display)->None:
-        pygame.draw.circle(screen, self._color, (int(self._rx), int(self._ry)), self.scaledRadius*2)
-    
     def inQuad(self,q:'Quad')->bool:
         return q.contains(self._rx, self._ry)
     
@@ -72,6 +70,58 @@ class Body:
         vx = (self._vx * self._mass + b._vx * b._mass) / mass
         vy = (self._vy * self._mass + b._vy * b._mass) / mass
         return Body(rx, ry, vx, vy, mass, self._color)
+
+    def collide(self,other:'Body')->None:
+        self.__collide(self,other)
+    
+    @staticmethod
+    def __collide(b1:'Body',b2:'Body')->None:
+    # def collide(self, b1:Body, b2:Body)->None:
+        """
+        Handles an elastic or inelastic collision between two bodies.
+        The `elastic` coefficient (1.0 = perfectly elastic, 0.0 = perfectly inelastic) determines energy loss.
+        """
+        # Extract properties
+        m1, m2 = b1._mass, b2._mass
+        r1, r2 = b1.scaledRadius, b2.scaledRadius
+        x1, y1, x2, y2 = b1._rx, b1._ry, b2._rx, b2._ry
+        vx1, vy1, vx2, vy2 = b1._vx, b1._vy, b2._vx, b2._vy
+        e = Body.elastic  # Elasticity coefficient
+
+        # Compute relative position and distance
+        dx, dy = x2 - x1, y2 - y1
+        dist = max((dx**2 + dy**2) ** 0.5, 1e-10)  # Avoid division by zero
+
+        # Normal and tangent vectors
+        nx, ny = dx / dist, dy / dist
+        tx, ty = -ny, nx
+
+        # Decompose velocities
+        dpTan1 = vx1 * tx + vy1 * ty
+        dpTan2 = vx2 * tx + vy2 * ty
+        dpNorm1 = vx1 * nx + vy1 * ny
+        dpNorm2 = vx2 * nx + vy2 * ny
+
+        # Compute new normal velocities using elastic coefficient
+        m1f = ((m1 - e * m2) * dpNorm1 + (1 + e) * m2 * dpNorm2) / (m1 + m2)
+        m2f = ((m2 - e * m1) * dpNorm2 + (1 + e) * m1 * dpNorm1) / (m1 + m2)
+
+        # Convert back to x, y components
+        b1._vx, b1._vy = tx * dpTan1 + nx * m1f, ty * dpTan1 + ny * m1f
+        b2._vx, b2._vy = tx * dpTan2 + nx * m2f, ty * dpTan2 + ny * m2f
+
+        # Resolve overlap by shifting bodies apart in a mass-weighted manner
+        overlap = r1 + r2 - dist
+        if overlap > 0:
+            correction1 = (m2 / (m1 + m2)) * overlap
+            correction2 = (m1 / (m1 + m2)) * overlap
+            b1._rx -= correction1 * nx
+            b1._ry -= correction1 * ny
+            b2._rx += correction2 * nx
+            b2._ry += correction2 * ny        
+        
+    def draw(self, screen:pygame.display)->None:
+        pygame.draw.circle(screen, self._color, (int(self._rx), int(self._ry)), self.scaledRadius*2)
     
     def __str__(self)->str:
         return f"Body(rx={self._rx}, ry={self._ry}, vx={self._vx}, vy={self._vy}, mass={self._mass}, color={self._color}, hash={self.__hash__()})"
