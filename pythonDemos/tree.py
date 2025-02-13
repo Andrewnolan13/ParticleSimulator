@@ -17,7 +17,6 @@ class Tree:
         self.numBodies:int = 0
     
     def insert(self, b:Body)->None:
-        # print(self._body)
         if self._body is None:
             self._body = b
         #internal node
@@ -35,30 +34,7 @@ class Tree:
             self._body = self._body.copy.plus(b)
         else:
             self._body = self._body.copy.plus(b)
-        self.numBodies += 1
-
-        # if not b.inQuad(self._quad):
-        #     return
-        # self.numBodies += 1
-        # if self._body == None:
-        #     self._body = b.copy
-        # #internal node
-        # if not self.isExternal():
-        #     self._body = self._body.copy.plus(b)
-        #     self.putBody(b)
-
-        # elif self.numBodies > 1:
-        #     # I think the issue is to do with self.numbodies not being updated until the tree is made
-        #     self._NW = Tree(self._quad.NW(),Theta = self.Theta)
-        #     self._NE = Tree(self._quad.NE(),Theta = self.Theta)
-        #     self._SW = Tree(self._quad.SW(),Theta = self.Theta)
-        #     self._SE = Tree(self._quad.SE(),Theta = self.Theta)            
-        #     self.putBody(self._body)
-        #     self.putBody(b)
-        #     self._body = self._body.copy.plus(b)        
-        # else:
-        #     self._body = self._body.copy.plus(b)
-        # # self.numBodies += 1        
+        self.numBodies += 1    
 
     def putBody(self, b:Body)->None:
         if b.inQuad(self._quad.NW()):
@@ -88,7 +64,6 @@ class Tree:
             d = self._body.distanceTo(b)+EPSILON
             if (s / d) < self.Theta:
                 b.addForce(self._body)
-                # print(1)
             else:
                 self._NW.updateForce(b)
                 self._NE.updateForce(b)
@@ -106,7 +81,6 @@ class Tree:
             bodies = self.getExternalBodies() # get all external node children
             for body in bodies:
                 if b.distanceTo(body) < b.scaledRadius + body.scaledRadius:
-                    # print(bodies)
                     self.collide(b,body)
 
         else:
@@ -117,13 +91,6 @@ class Tree:
     
     def getExternalBodies(self)->list[Body]:
         if self.isExternal():
-            # print(self.numBodies)
-            # print(self)
-            # print('NW',self._NW)
-            # print('NE',self._NE)
-            # print('SW',self._SW)
-            # print('SE',self._SE)
-            # exit()
             return [self._body] if self._body != None else []
         else:
             return self._NW.getExternalBodies() + self._NE.getExternalBodies() + self._SW.getExternalBodies() + self._SE.getExternalBodies()
@@ -134,9 +101,9 @@ class Tree:
         '''
         if b1 == b2:          
             return
-        print(b1," hash ",b1.__hash__())
-        print(b2," hash ",b2.__hash__())
-        print('colliding')
+        # print(b1," hash ",b1.__hash__())
+        # print(b2," hash ",b2.__hash__())
+        # print('colliding')
         # print(self.getExternalBodies())
         # exit(0)
         m1 = b1._mass
