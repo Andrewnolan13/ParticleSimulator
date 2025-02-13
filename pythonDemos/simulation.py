@@ -8,6 +8,8 @@ class Simulation:
     WIDTH:int = 800
     HEIGHT:int = 800
     WALL_DAMPING:float = 0.4
+
+    __placingParticle:bool = False
     def __init__(self, bodies:list[Body], dt:float, radius:float) -> None:
         self.bodies = bodies
         self.dt = dt
@@ -49,11 +51,12 @@ class Simulation:
         clock = pygame.time.Clock()
         font = pygame.font.SysFont("Arial", 18)
 
-        running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
+        self.running = True
+        # self.last_added_time = 0
+
+        while self.running:
+            # handle events like adding bodies, quitting, etc.
+            self.handlePygameEvents()
 
             radius = max(screen.get_width(), screen.get_height())
             quad = Quad(screen.get_width()/2, screen.get_height()/2, radius) #:TODO generalize to rectangles
@@ -76,6 +79,36 @@ class Simulation:
 
         pygame.quit()
     
+    def handlePygameEvents(self) -> None:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                self.__start_pos = pygame.mouse.get_pos()
+                self.__placingParticle = True
+                self.__startPlacingParticleTime = pygame.time.get_ticks()
+
+            elif event.type == pygame.MOUSEBUTTONUP and self.__placingParticle:
+                x1,y1 = self.__start_pos
+                x2,y2 = pygame.mouse.get_pos()
+                dx = x2 - x1
+                dy = y2 - y1
+                # slingshot effect
+                dx = -dx 
+                dy = -dy
+                
+                # mass
+                finishTime = pygame.time.get_ticks()
+                mass = (finishTime - self.__startPlacingParticleTime)*10**10
+                # add body
+                newBody = Body(x1, y1, dx, dy, mass, (0, 0, 255))
+                newBody.overRiddenRadius = max(5,newBody.scaledRadius)
+                self.bodies.append(newBody)
+                
+                # close
+                self.__placingParticle = False
+       
     def __draw(self,screen:pygame.display,tree:Tree,drawBarnesHuts:bool)->None:
         screen.fill((0, 0, 0))
         if drawBarnesHuts:
@@ -102,9 +135,20 @@ class Simulation:
         # Update forces and positions
         for body in self.bodies:
             body.update(self.dt)
+        #draw user input:
+        if self.__placingParticle and self.__start_pos:
+            x1,y1 = self.__start_pos
+            x2,y2 = pygame.mouse.get_pos()
+            pygame.draw.line(screen, (255, 255, 255), (x1, y1), (x2, y2), 2)
+            mass = (pygame.time.get_ticks() - self.__startPlacingParticleTime)*10**10
+            radius = mass**(1/3)
+            radius = min(25,max(5, radius/1000))
+            pygame.draw.circle(screen, (0, 0, 255), (x1, y1), radius)
+
         # Draw bodies
         for body in self.bodies:              
-            body.draw(screen)     
+            body.draw(screen)  
+           
     
     def __bhGravity(self, tree:Tree)->None:
         for body in self.bodies:
