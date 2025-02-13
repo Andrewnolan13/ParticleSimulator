@@ -3,10 +3,11 @@ import pygame
 from quad import Quad
 
 class Body:
-    __slots__ = ['_rx', '_ry', '_vx', '_vy', '_mass', '_color', '_fx', '_fy', 'radius']
+    __slots__ = ['_rx', '_ry', '_vx', '_vy', '_mass', '_color', '_fx', '_fy', 'radius','overRiddenRadius']
     G:float = 6.67430e-11
     color:tuple[int] = (0,0,0)
     elastic:float = 1.0
+    EPSILON:float = 10**-4
     def __init__(self, rx:float,ry:float,vx:float, vy:float,mass:float,color:tuple[int]):
         self._mass = mass
         self._rx = rx
@@ -17,10 +18,11 @@ class Body:
         self._fx = 0.0
         self._fy = 0.0
         self.radius = self._mass ** (1/3)
+        self.overRiddenRadius:int = None
     
     @property
     def scaledRadius(self)->int:
-        return min(max(1,int(self.radius/1000)),25)
+        return min(max(1,int(self.radius/1000)),25) if self.overRiddenRadius == None else self.overRiddenRadius
     @property
     def copy(self)->'Body':
         '''return a copy of the body'''
@@ -134,7 +136,7 @@ class Body:
             # smallbody get's shifted by the overlap, big one doesn't.
             dx = largeBody._rx - smallBody._rx
             dy = largeBody._ry - smallBody._ry
-            dist = math.sqrt(dx*dx + dy*dy)
+            dist = math.sqrt(dx*dx + dy*dy)+Body.EPSILON
             nx = dx / dist
             ny = dy / dist
 

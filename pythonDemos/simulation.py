@@ -3,24 +3,45 @@ from tree import Tree
 from quad import Quad
 import pygame
 import numpy as np
-# from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
-# import os
-import sys
-
-# sys.setrecursionlimit(3000)
 
 class Simulation:
-    __slots__ = ['bodies', 'dt', 'radius', 'N','reCenter','gravitationalForce','collisionDetection']
     WIDTH:int = 800
     HEIGHT:int = 800
+    WALL_DAMPING:float = 0.4
     def __init__(self, bodies:list[Body], dt:float, radius:float) -> None:
         self.bodies = bodies
         self.dt = dt
         self.radius = radius
         self.N = len(bodies)
+
+        #default options
         self.reCenter = True
         self.gravitationalForce = True
         self.collisionDetection = True
+        self.boundaryCollisions = False
+        self._localGravity:float = None
+
+        self._algorithm = "Barnes-Hut"
+    
+    @property
+    def algorithm(self)->str:
+        return self._algorithm
+
+    @algorithm.setter
+    def algorithm(self, value:str)->None:
+        if value not in ["Barnes-Hut","Brute Force"]:
+            raise ValueError("Algorithm must be either 'Barnes-Hut' or 'Brute Force'")
+        self._algorithm = value
+
+    @property
+    def localGravity(self)->float:
+        return self._localGravity
+    
+    @localGravity.setter
+    def localGravity(self, value:float)->None:
+        if value < 0:
+            raise ValueError("Local gravity must be positive)")
+        self._localGravity = value
 
     def simulate(self,Theta,drawBarnesHuts:bool = False,frames_per_second:int = 60) -> None:
         pygame.init()
@@ -61,59 +82,85 @@ class Simulation:
             tree.draw(screen)
         #update forces and positions
         if self.gravitationalForce:
-            self.bhGravity(tree)
-
+            if self.algorithm == "Brute Force":
+                self.__bruteForceGravity()
+            elif self.algorithm == "Barnes-Hut":
+                self.__bhGravity(tree)
+        
         # collision detection
         if self.collisionDetection:
-            self.bhHandleCollisions(tree)
-
+            self.__bhHandleCollisions(tree)
+        #boundary collisions
+        if self.boundaryCollisions:
+            self.__handleBoundaryCollisions(screen)
+        #local gravity
+        if self.localGravity:
+            self.__handleLocalGravity()
+        # Centre of mass recentering. If the system run's away, you still see it. 
         if self.reCenter:
-            # Cetnre of mass recentering. If the system run's away, you still see it. 
-            offset = max([body.scaledRadius+5 for body in self.bodies])
-            com_x = sum(body._rx*body._mass for body in self.bodies) / sum(body._mass for body in self.bodies) + offset
-            com_y = sum(body._ry*body._mass for body in self.bodies) / sum(body._mass for body in self.bodies) + offset
-
-            for body in self.bodies:
-                body._rx += (screen.get_width()/2 - com_x)
-                body._ry += (screen.get_height()/2 - com_y)
-
+            self.__reCentre(screen)
+        # Update forces and positions
         for body in self.bodies:
             body.update(self.dt)
-
+        # Draw bodies
         for body in self.bodies:              
             body.draw(screen)     
-
-    def bhGravity(self, tree:Tree)->None:
+    
+    def __bhGravity(self, tree:Tree)->None:
         for body in self.bodies:
             body.resetForce()
             tree.updateForce(body)
     
-    def bhHandleCollisions(self,tree:Tree)->None:
-        for body in self.bodies:
-            tree.updateCollisions(body,threshold=tree.numBodies/10)
+    def __bruteForceGravity(self)->None:
+        for i in range(self.N):
+            self.bodies[i].resetForce()
 
-    def bruteForceGravity(self, screen:pygame.display)->None:
-        for body in self.bodies:
-            body.draw(screen)
-            body.resetForce()
         for i in range(self.N):
             for j in range(i+1,self.N):
                 self.bodies[i].addForce(self.bodies[j])
                 self.bodies[j].addForce(self.bodies[i])
-        for body in self.bodies:
-            body.update(self.dt)
     
-    def bruteForceHandleCollisions(self):
-        # brute force collision detection
-        for i in range(self.N):
-            for j in range(i+1,self.N):
-                if self.bodies[i].distanceTo(self.bodies[j]) < self.bodies[i].scaledRadius + self.bodies[j].scaledRadius:
-                    idx1 = i if self.bodies[i]._mass > self.bodies[j]._mass else j
-                    idx2 = i if idx1 == j else j
-                    self.bodies[idx1] = self.bodies[idx1].plus(self.bodies[idx2])
-                    self.bodies.pop(idx2)
-                    self.N -= 1
-                    break
+    def __bhHandleCollisions(self,tree:Tree)->None:
+        for body in self.bodies:
+            tree.updateCollisions(body,threshold=tree.numBodies/10)
+
+    def __reCentre(self,screen:pygame.display)->None:
+        # Cetnre of mass recentering. If the system run's away, you still see it. 
+        offset = max([body.scaledRadius+5 for body in self.bodies])
+        com_x = sum(body._rx*body._mass for body in self.bodies) / sum(body._mass for body in self.bodies) + offset
+        com_y = sum(body._ry*body._mass for body in self.bodies) / sum(body._mass for body in self.bodies) + offset
+
+        for body in self.bodies:
+            body._rx += (screen.get_width()/2 - com_x)
+            body._ry += (screen.get_height()/2 - com_y)
+
+    def __handleBoundaryCollisions(self,screen:pygame.display)->None:
+        for body in self.bodies:
+            if body._rx - body.scaledRadius < 0 or body._rx + body.scaledRadius > screen.get_width():
+                correctDirection = 1 if body._rx - body.scaledRadius < 0 else -1
+                body._vx = abs(body._vx) * correctDirection * self.WALL_DAMPING
+                #teleport to the edge
+                if body._rx - body.scaledRadius < 0:
+                    body._rx = body.scaledRadius
+                else:
+                    body._rx = screen.get_width() - body.scaledRadius
+                
+            if body._ry - body.scaledRadius < 0 or body._ry + body.scaledRadius > screen.get_height():
+                correctDirection = 1 if body._ry - body.scaledRadius < 0 else -1
+                body._vy = abs(body._vy) * correctDirection * self.WALL_DAMPING
+
+                #teleport to the edge
+                if body._ry - body.scaledRadius < 0:
+                    body._ry = body.scaledRadius
+                else:
+                    body._ry = screen.get_height() - body.scaledRadius
+
+
+    def __handleLocalGravity(self)->None:
+        for body in self.bodies:
+            body._vy += self.localGravity
+    
+
 
 if __name__ == "__main__":
     ## make a solar system
@@ -129,8 +176,8 @@ if __name__ == "__main__":
     rings = [widthFactor*(i+1)/(nrings+1) for i in range(nrings)][::-1]
     masses = [10**(0.5*(i)) for i in range(nrings)]
     # make nrings distinct colors
-    colors = [(255, 255 * i // nrings, 255 * (nrings - i) // nrings) for i in range(nrings)]
-    
+    # colors = [(255, 255 * i // nrings, 255 * (nrings - i) // nrings) for i in range(nrings)]
+    colors = [(255,255,255) for i in range(nrings)]
     for i in range(20):
         theta = 2 * np.pi * np.random.random()
         radius = rings[i%nrings] + 1* np.random.randn()
@@ -143,7 +190,7 @@ if __name__ == "__main__":
         body = Body(x, y, vx, vy, 10**10, (0, 255, 0))
         bodies.append(body)
 
-    for i in range(100):
+    for i in range(1000):
         theta = 2 * np.pi * np.random.random()
         radius = rings[i%nrings] + 1* np.random.randn()
         x = SUN._rx + radius * np.cos(theta)
@@ -175,5 +222,7 @@ if __name__ == "__main__":
 
     # print(bodies)
 
-    sim = Simulation(bodies, dt =0.1, radius=Simulation.WIDTH)
-    sim.simulate(Theta = float('inf'),drawBarnesHuts = False, frames_per_second = 120)
+    sim = Simulation(bodies, dt =1, radius=Simulation.WIDTH)
+    sim.collisionDetection = False
+    # sim.algorithm = 'Brute Force'
+    sim.simulate(Theta = float('inf'),drawBarnesHuts = False, frames_per_second = 30)
