@@ -5,7 +5,7 @@ import pygame
 EPSILON = 10**-4
 
 class Tree:
-    __slots__ = ['_quad', '_body', '_NW', '_NE', '_SW', '_SE', 'Theta', 'numBodies']
+    __slots__ = ['_quad', '_body', '_NW', '_NE', '_SW', '_SE', 'Theta', 'numBodies','maxRadius']
     def __init__(self, var1:Quad, Theta)->None:
         self._quad = var1
         self._body = None
@@ -15,8 +15,11 @@ class Tree:
         self._SE = None
         self.Theta:float = Theta
         self.numBodies:int = 0
+        self.maxRadius:int = 0
     
     def insert(self, b:Body)->None:
+        if not b.inQuad(self._quad):
+            return
         if self._body is None:
             self._body = b
         #internal node
@@ -34,7 +37,8 @@ class Tree:
             self._body = self._body.copy.plus(b)
         else:
             self._body = self._body.copy.plus(b)
-        self.numBodies += 1    
+        self.numBodies += 1
+        self.maxRadius = max(self.maxRadius,b.scaledRadius)
 
     def putBody(self, b:Body)->None:
         if b.inQuad(self._quad.NW()):
@@ -72,12 +76,19 @@ class Tree:
     
     def updateCollisions(self, b:Body,threshold:int)->None:
         '''
-        check particle collisions piecewise if there are less than 'threshold' particles in the quad
+        check particle collisions piecewise if there are less than 'threshold' particles in the quad.
+
+        one issue I have is with areas of high density, the tree keeps subdividing. Which means, if the threshold is say, 10
+        and 100 particles swarm the sun. Some of them make it into the sun until they get close enough to the centre, where there's only of 10 of them and then they get pushed out.
+
+        maybe I could fix this by keeping track of the largest radius in a quad.
+        and don't subdivide then. <- This works!!!!
         '''
         # not bothered checking borders
         if not b.inQuad(self._quad) or self.isExternal() or self._body == None:
             return
-        elif self.numBodies <= threshold:
+        # elif self.numBodies <= threshold:
+        elif self.numBodies <= threshold or self.maxRadius*2 > self._quad.length()/4:
             bodies = self.getExternalBodies() # get all external node children
             for body in bodies:
                 if b.distanceTo(body) < b.scaledRadius + body.scaledRadius:

@@ -7,10 +7,10 @@ import numpy as np
 # import os
 import sys
 
-sys.setrecursionlimit(3000)
+# sys.setrecursionlimit(3000)
 
 class Simulation:
-    __slots__ = ['bodies', 'dt', 'radius', 'N','reCenter']
+    __slots__ = ['bodies', 'dt', 'radius', 'N','reCenter','gravitationalForce','collisionDetection']
     WIDTH:int = 800
     HEIGHT:int = 800
     def __init__(self, bodies:list[Body], dt:float, radius:float) -> None:
@@ -19,7 +19,8 @@ class Simulation:
         self.radius = radius
         self.N = len(bodies)
         self.reCenter = True
-        # self.collisionThreshold = collisionThreshold
+        self.gravitationalForce = True
+        self.collisionDetection = True
 
     def simulate(self,Theta,drawBarnesHuts:bool = False,frames_per_second:int = 60) -> None:
         pygame.init()
@@ -49,10 +50,9 @@ class Simulation:
             numBodies_text = font.render(f"Number of bodies: {tree.numBodies}", True, pygame.Color('white'))
             screen.blit(fps_text, (10, 10))
             screen.blit(numBodies_text, (10, 30))
-
             pygame.display.flip()
             clock.tick(frames_per_second)
-            # print(tree.getExternalBodies())
+
         pygame.quit()
     
     def __draw(self,screen:pygame.display,tree:Tree,drawBarnesHuts:bool)->None:
@@ -60,12 +60,13 @@ class Simulation:
         if drawBarnesHuts:
             tree.draw(screen)
         #update forces and positions
-        self.bhGravity(screen,tree)
-        # self.bruteForceGravity(screen)
-        # self.bruteForce(screen)
+        if self.gravitationalForce:
+            self.bhGravity(tree)
 
         # collision detection
-        self.bhHandleCollisions(screen,tree)
+        if self.collisionDetection:
+            self.bhHandleCollisions(tree)
+
         if self.reCenter:
             # Cetnre of mass recentering. If the system run's away, you still see it. 
             offset = max([body.scaledRadius+5 for body in self.bodies])
@@ -82,16 +83,13 @@ class Simulation:
         for body in self.bodies:              
             body.draw(screen)     
 
-    def bhGravity(self, screen:pygame.display, tree:Tree)->None:
+    def bhGravity(self, tree:Tree)->None:
         for body in self.bodies:
-            # body.draw(screen)
             body.resetForce()
             tree.updateForce(body)
-            # body.update(self.dt)
     
-    def bhHandleCollisions(self,screen:pygame.display,tree:Tree)->None:
+    def bhHandleCollisions(self,tree:Tree)->None:
         for body in self.bodies:
-            # body.draw(screen)
             tree.updateCollisions(body,threshold=tree.numBodies/10)
 
     def bruteForceGravity(self, screen:pygame.display)->None:

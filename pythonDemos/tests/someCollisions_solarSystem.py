@@ -58,7 +58,7 @@ def  main():
             body = Body(x, y, vx, vy, 10**10, (0, 255, 0))
             bodies.append(body)
 
-        for i in range(1000):
+        for i in range(100):
             theta = 2 * np.pi * np.random.random()
             radius = rings[i%nrings] + 1* np.random.randn()
             x = SUN._rx + radius * np.cos(theta)
@@ -82,9 +82,10 @@ def  main():
 
 
         args = get_args()
-        sim = Simulation(bodies, dt =1, radius=Simulation.WIDTH)
+        sim = Simulation(bodies, dt =0.02, radius=Simulation.WIDTH)
         sim.gravitationalForce = True
         sim.collisionDetection = True
+        sim.reCenter = False
         sim.simulate(Theta = float('inf'), drawBarnesHuts = args.drawBH, frames_per_second = args.fps)
 
     except KeyboardInterrupt:

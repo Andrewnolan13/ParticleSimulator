@@ -10,9 +10,17 @@ from quad import Quad
 from simulation import Simulation
 import pygame
 import numpy as np
-
+import argparse
 
 np.random.seed(10)
+
+def get_args():
+    '''drawBarnesHuts:bool = False,frames_per_second:int = 60'''
+    parser = argparse.ArgumentParser(description='Run the simulation')
+    parser.add_argument('--drawBH', type=bool, default=False, help='Draw Barnes-Hut tree')
+    parser.add_argument('--fps', type=int, default=60, help='Frames per second')
+
+    return parser.parse_args()
 
 def main():
     #make one large particle, travelling from left to right.
@@ -56,9 +64,15 @@ def main():
             bodies.append(b)
 
     # Initialize simulation
+    args = get_args() 
+
     sim = Simulation(bodies, dt=0.1, radius=Simulation.WIDTH)
     sim.reCenter = False
-    sim.simulate(Theta=float('inf'), drawBarnesHuts=False, frames_per_second=60)
+    sim.gravitationalForce = True
+    sim.collisionDetection = True
+    # drawBarnesHuts = args.drawBH
+    # frames_per_second = args.fps
+    sim.simulate(Theta=float('inf'), drawBarnesHuts=args.drawBH, frames_per_second=args.fps)
 
 if __name__ == '__main__':
     main()

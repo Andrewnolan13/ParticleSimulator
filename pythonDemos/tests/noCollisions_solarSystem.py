@@ -11,11 +11,10 @@ from tree import Tree
 from quad import Quad
 import pygame
 import numpy as np
-# from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
-# import os
+import argparse
 
 from simulation import Simulation
-import argparse
+
 def get_args():
     '''drawBarnesHuts:bool = False,frames_per_second:int = 60'''
     parser = argparse.ArgumentParser(description='Run the simulation')
@@ -35,7 +34,6 @@ def  main():
         SUN: Body = Body(centre[0]+35, centre[1]+35, 0.0, 0.0, 10**13, (255, 0, 0))
         bodies.append(SUN)
 
-        print(SUN)
 
         widthFactor = min(Simulation.WIDTH / 2, Simulation.HEIGHT / 2)
         nrings = 3
@@ -80,11 +78,10 @@ def  main():
         body = Body(x, y, vx, vy, mass, (0, 0, 255))
         bodies.append(body)
 
-
         args = get_args()
         sim = Simulation(bodies, dt =1, radius=Simulation.WIDTH)
         sim.gravitationalForce = True
-        sim.collisionDetection = True
+        sim.collisionDetection = False
         sim.simulate(Theta = float('inf'), drawBarnesHuts = args.drawBH, frames_per_second = args.fps)
 
     except KeyboardInterrupt:
