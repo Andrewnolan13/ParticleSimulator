@@ -115,49 +115,49 @@ class Tree:
         '''
         if b1 == b2:
             return
-        print(b1," hash ",b1.__hash__())
-        print(b2," hash ",b2.__hash__())
-        print('colliding')
-        m1 = b1._mass
-        m2 = b2._mass
-        r1 = b1.scaledRadius
-        r2 = b2.scaledRadius
-        x1 = b1._rx
-        y1 = b1._ry
-        x2 = b2._rx
-        y2 = b2._ry
-        vx1 = b1._vx
-        vy1 = b1._vy
-        vx2 = b2._vx
-        vy2 = b2._vy
+        # print(b1," hash ",b1.__hash__())
+        # print(b2," hash ",b2.__hash__())
+        # print('colliding')
+        # m1 = b1._mass
+        # m2 = b2._mass
+        # r1 = b1.scaledRadius
+        # r2 = b2.scaledRadius
+        # x1 = b1._rx
+        # y1 = b1._ry
+        # x2 = b2._rx
+        # y2 = b2._ry
+        # vx1 = b1._vx
+        # vy1 = b1._vy
+        # vx2 = b2._vx
+        # vy2 = b2._vy
 
-        dx = x2 - x1
-        dy = y2 - y1
-        dist = b1.distanceTo(b2)+EPSILON
-        nx = dx / dist
-        ny = dy / dist
-        tx = -ny
-        ty = nx
-        dpTan1 = vx1 * tx + vy1 * ty
-        dpTan2 = vx2 * tx + vy2 * ty
-        dpNorm1 = vx1 * nx + vy1 * ny
-        dpNorm2 = vx2 * nx + vy2 * ny
-        m1f = (dpNorm1 * (m1 - m2) + 2 * m2 * dpNorm2) / (m1 + m2)
-        m2f = (dpNorm2 * (m2 - m1) + 2 * m1 * dpNorm1) / (m1 + m2)
-        b1._vx = tx * dpTan1 + nx * m1f
-        b1._vy = ty * dpTan1 + ny * m1f
-        b2._vx = tx * dpTan2 + nx * m2f
-        b2._vy = ty * dpTan2 + ny * m2f
-        # move particles so they don't overlap
-        overlap = r1 + r2 - dist
-        x1 -= overlap * nx
-        y1 -= overlap * ny
-        x2 += overlap * nx
-        y2 += overlap * ny
-        b1._rx = x1
-        b1._ry = y1
-        b2._rx = x2
-        b2._ry = y2  
+        # dx = x2 - x1
+        # dy = y2 - y1
+        # dist = b1.distanceTo(b2)+EPSILON
+        # nx = dx / dist
+        # ny = dy / dist
+        # tx = -ny
+        # ty = nx
+        # dpTan1 = vx1 * tx + vy1 * ty
+        # dpTan2 = vx2 * tx + vy2 * ty
+        # dpNorm1 = vx1 * nx + vy1 * ny
+        # dpNorm2 = vx2 * nx + vy2 * ny
+        # m1f = (dpNorm1 * (m1 - m2) + 2 * m2 * dpNorm2) / (m1 + m2)
+        # m2f = (dpNorm2 * (m2 - m1) + 2 * m1 * dpNorm1) / (m1 + m2)
+        # b1._vx = tx * dpTan1 + nx * m1f
+        # b1._vy = ty * dpTan1 + ny * m1f
+        # b2._vx = tx * dpTan2 + nx * m2f
+        # b2._vy = ty * dpTan2 + ny * m2f
+        # # move particles so they don't overlap
+        # overlap = r1 + r2 - dist
+        # x1 -= overlap * nx
+        # y1 -= overlap * ny
+        # x2 += overlap * nx
+        # y2 += overlap * ny
+        # b1._rx = x1
+        # b1._ry = y1
+        # b2._rx = x2
+        # b2._ry = y2  
 
     def __str__(self)->str:
         if self.isExternal():
