@@ -17,11 +17,12 @@ class Tree:
         self.numBodies:int = 0
     
     def insert(self, b:Body)->None:
-        if self._body == None:
+        # print(self._body)
+        if self._body is None:
             self._body = b
         #internal node
-        if not self.isExternal():
-            self._body = self._body.plus(b)
+        elif not self.isExternal(): # it was here.. I changed if to elif. 
+            self._body = self._body.copy.plus(b)
             self.putBody(b)
 
         elif self.numBodies == 1:
@@ -31,15 +32,33 @@ class Tree:
             self._SE = Tree(self._quad.SE(),Theta = self.Theta)            
             self.putBody(self._body)
             self.putBody(b)
-            # IT htink this is the bug. In java, this might just reassign a new body, where as this is potentially mutating the original object
-            # print(self._body,'hash',self._body.__hash__())
             self._body = self._body.copy.plus(b)
-            # print(self._body,'hash',self._body.__hash__())
-            # exit()
-        
         else:
-            self._body = self._body.plus(b)
+            self._body = self._body.copy.plus(b)
         self.numBodies += 1
+
+        # if not b.inQuad(self._quad):
+        #     return
+        # self.numBodies += 1
+        # if self._body == None:
+        #     self._body = b.copy
+        # #internal node
+        # if not self.isExternal():
+        #     self._body = self._body.copy.plus(b)
+        #     self.putBody(b)
+
+        # elif self.numBodies > 1:
+        #     # I think the issue is to do with self.numbodies not being updated until the tree is made
+        #     self._NW = Tree(self._quad.NW(),Theta = self.Theta)
+        #     self._NE = Tree(self._quad.NE(),Theta = self.Theta)
+        #     self._SW = Tree(self._quad.SW(),Theta = self.Theta)
+        #     self._SE = Tree(self._quad.SE(),Theta = self.Theta)            
+        #     self.putBody(self._body)
+        #     self.putBody(b)
+        #     self._body = self._body.copy.plus(b)        
+        # else:
+        #     self._body = self._body.copy.plus(b)
+        # # self.numBodies += 1        
 
     def putBody(self, b:Body)->None:
         if b.inQuad(self._quad.NW()):
@@ -113,51 +132,58 @@ class Tree:
         '''
         Elastic collision between two particles
         '''
-        if b1 == b2:
+        if b1 == b2:          
             return
-        # print(b1," hash ",b1.__hash__())
-        # print(b2," hash ",b2.__hash__())
-        # print('colliding')
-        # m1 = b1._mass
-        # m2 = b2._mass
-        # r1 = b1.scaledRadius
-        # r2 = b2.scaledRadius
-        # x1 = b1._rx
-        # y1 = b1._ry
-        # x2 = b2._rx
-        # y2 = b2._ry
-        # vx1 = b1._vx
-        # vy1 = b1._vy
-        # vx2 = b2._vx
-        # vy2 = b2._vy
+        print(b1," hash ",b1.__hash__())
+        print(b2," hash ",b2.__hash__())
+        print('colliding')
+        # print(self.getExternalBodies())
+        # exit(0)
+        m1 = b1._mass
+        m2 = b2._mass
+        r1 = b1.scaledRadius
+        r2 = b2.scaledRadius
+        x1 = b1._rx
+        y1 = b1._ry
+        x2 = b2._rx
+        y2 = b2._ry
+        vx1 = b1._vx
+        vy1 = b1._vy
+        vx2 = b2._vx
+        vy2 = b2._vy
 
-        # dx = x2 - x1
-        # dy = y2 - y1
-        # dist = b1.distanceTo(b2)+EPSILON
-        # nx = dx / dist
-        # ny = dy / dist
-        # tx = -ny
-        # ty = nx
-        # dpTan1 = vx1 * tx + vy1 * ty
-        # dpTan2 = vx2 * tx + vy2 * ty
-        # dpNorm1 = vx1 * nx + vy1 * ny
-        # dpNorm2 = vx2 * nx + vy2 * ny
-        # m1f = (dpNorm1 * (m1 - m2) + 2 * m2 * dpNorm2) / (m1 + m2)
-        # m2f = (dpNorm2 * (m2 - m1) + 2 * m1 * dpNorm1) / (m1 + m2)
-        # b1._vx = tx * dpTan1 + nx * m1f
-        # b1._vy = ty * dpTan1 + ny * m1f
-        # b2._vx = tx * dpTan2 + nx * m2f
-        # b2._vy = ty * dpTan2 + ny * m2f
-        # # move particles so they don't overlap
-        # overlap = r1 + r2 - dist
-        # x1 -= overlap * nx
-        # y1 -= overlap * ny
-        # x2 += overlap * nx
-        # y2 += overlap * ny
+        dx = x2 - x1
+        dy = y2 - y1
+        dist = b1.distanceTo(b2)+EPSILON
+        nx = dx / dist
+        ny = dy / dist
+        tx = -ny
+        ty = nx
+        dpTan1 = vx1 * tx + vy1 * ty
+        dpTan2 = vx2 * tx + vy2 * ty
+        dpNorm1 = vx1 * nx + vy1 * ny
+        dpNorm2 = vx2 * nx + vy2 * ny
+        m1f = (dpNorm1 * (m1 - m2) + 2 * m2 * dpNorm2) / (m1 + m2)
+        m2f = (dpNorm2 * (m2 - m1) + 2 * m1 * dpNorm1) / (m1 + m2)
+        b1._vx = tx * dpTan1 + nx * m1f
+        b1._vy = ty * dpTan1 + ny * m1f
+        b2._vx = tx * dpTan2 + nx * m2f
+        b2._vy = ty * dpTan2 + ny * m2f
+        # move particles so they don't overlap
+        overlap = r1 + r2 - dist
+        x1 -= overlap * nx
+        y1 -= overlap * ny
+        x2 += overlap * nx
+        y2 += overlap * ny
         # b1._rx = x1
         # b1._ry = y1
         # b2._rx = x2
-        # b2._ry = y2  
+        # b2._ry = y2
+        b1._rx -= overlap * nx * (m2 / (m1 + m2))
+        b1._ry -= overlap * ny * (m2 / (m1 + m2))
+        b2._rx += overlap * nx * (m1 / (m1 + m2))
+        b2._ry += overlap * ny * (m1 / (m1 + m2))
+          
 
     def __str__(self)->str:
         if self.isExternal():

@@ -81,7 +81,7 @@ class Simulation:
     
     def bhHandleCollisions(self, tree:Tree):
         for body in self.bodies:
-            tree.updateCollisions(body,threshold=10)
+            tree.updateCollisions(body,threshold=100)
 
     def bruteForceGravity(self, screen:pygame.display)->None:
         for body in self.bodies:
@@ -112,7 +112,7 @@ if __name__ == "__main__":
 
     bodies = []
     centre = np.array([Simulation.WIDTH / 2, Simulation.HEIGHT / 2])
-    SUN: Body = Body(centre[0]+10, centre[1]+10, 0.0, 0.0, 10**12, (255, 0, 0))
+    SUN: Body = Body(centre[0]+10, centre[1]+10, 0.0, 0.0, 10**13, (255, 0, 0))
     bodies.append(SUN)
     widthFactor = min(Simulation.WIDTH / 2, Simulation.HEIGHT / 2)
     nrings = 3
@@ -127,7 +127,7 @@ if __name__ == "__main__":
         radius = rings[i%nrings] + 1* np.random.randn()
         x = SUN._rx + radius * np.cos(theta)
         y = SUN._ry + radius * np.sin(theta)
-        v = np.sqrt(SUN.G * SUN._mass / radius)
+        v = np.sqrt(SUN.G * SUN._mass / radius)*0
         vx = -v * np.sin(theta)
         vy = v * np.cos(theta)
         mass = masses[i%nrings]+max(0,np.random.randn()*10**3)
@@ -139,7 +139,7 @@ if __name__ == "__main__":
         radius = rings[i%nrings] + 1* np.random.randn()
         x = SUN._rx + radius * np.cos(theta)
         y = SUN._ry + radius * np.sin(theta)
-        v = np.sqrt(SUN.G * SUN._mass / radius)
+        v = np.sqrt(SUN.G * SUN._mass / radius**2)
         vx = -v * np.sin(theta)
         vy = v * np.cos(theta)
         mass = masses[i%nrings]+max(0,np.random.randn()*10**3)

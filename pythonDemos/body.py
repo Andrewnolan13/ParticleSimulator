@@ -54,7 +54,7 @@ class Body:
         # EPS = 3E4
         dx = b._rx - self._rx
         dy = b._ry - self._ry
-        dist = max(math.sqrt(dx*dx + dy*dy),self.scaledRadius**2+b.scaledRadius**2)
+        dist = max(math.sqrt(dx*dx + dy*dy),self.scaledRadius+b.scaledRadius)
         F = (Body.G * self._mass * b._mass) / (dist*dist)
         self._fx += F * dx / dist
         self._fy += F * dy / dist
@@ -74,7 +74,7 @@ class Body:
         return Body(rx, ry, vx, vy, mass, self._color)
     
     def __str__(self)->str:
-        return f"Body(rx={self._rx}, ry={self._ry}, vx={self._vx}, vy={self._vy}, mass={self._mass}, color={self._color})"
+        return f"Body(rx={self._rx}, ry={self._ry}, vx={self._vx}, vy={self._vy}, mass={self._mass}, color={self._color}, hash={self.__hash__()})"
     
     def __repr__(self)->str:
         return self.__str__()
