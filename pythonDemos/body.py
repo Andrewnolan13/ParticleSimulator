@@ -81,6 +81,9 @@ class Body:
         Handles an elastic or inelastic collision between two bodies.
         The `elastic` coefficient (1.0 = perfectly elastic, 0.0 = perfectly inelastic) determines energy loss.
         """
+        # print("colliding")
+        # print(b1)
+        # print(b2)
         # Extract properties
         m1, m2 = b1._mass, b2._mass
         r1, r2 = b1.scaledRadius, b2.scaledRadius
@@ -113,15 +116,39 @@ class Body:
         # Resolve overlap by shifting bodies apart in a mass-weighted manner
         overlap = r1 + r2 - dist
         if overlap > 0:
-            correction1 = (m2 / (m1 + m2)) * overlap
-            correction2 = (m1 / (m1 + m2)) * overlap
-            b1._rx -= correction1 * nx
-            b1._ry -= correction1 * ny
-            b2._rx += correction2 * nx
-            b2._ry += correction2 * ny        
+            # correction1 = (m2/ (m1 + m2)) * overlap
+            # correction2 = (m1/ (m1 + m2)) * overlap
+            # b1._rx -= correction1 * nx
+            # b1._ry -= correction1 * ny
+            # b2._rx += correction2 * nx
+            # b2._ry += correction2 * ny
+            # b1._rx -= overlap * nx
+            # b1._ry -= overlap * ny
+            # b2._rx += overlap * nx
+            # b2._ry += overlap * ny
+
+
+
+            largeBody = b1 if b1._mass > b2._mass else b2
+            smallBody = b1 if largeBody == b2 else b2
+            # smallbody get's shifted by the overlap, big one doesn't.
+            dx = largeBody._rx - smallBody._rx
+            dy = largeBody._ry - smallBody._ry
+            dist = math.sqrt(dx*dx + dy*dy)
+            nx = dx / dist
+            ny = dy / dist
+
+            overlap = largeBody.scaledRadius + smallBody.scaledRadius - dist
+            smallBody._rx -= overlap * nx
+            smallBody._ry -= overlap * ny
+
+            # smallBody._rx += overlap * nx
+            # smallBody._ry += overlap * ny      
+
         
     def draw(self, screen:pygame.display)->None:
-        pygame.draw.circle(screen, self._color, (int(self._rx), int(self._ry)), self.scaledRadius*2)
+        position = (round(self._rx), round(self._ry))
+        pygame.draw.circle(screen, self._color, (*position,), self.scaledRadius)
     
     def __str__(self)->str:
         return f"Body(rx={self._rx}, ry={self._ry}, vx={self._vx}, vy={self._vy}, mass={self._mass}, color={self._color}, hash={self.__hash__()})"

@@ -41,8 +41,8 @@ class Quad:
         var5 = self._length / 2.0
         return Quad(var1, var3, var5)
     
-    def draw(self, screen:pygame.display)->None:
-        pygame.draw.rect(screen, (255,255,255), pygame.Rect(self._xmid - self._length / 2.0, self._ymid - self._length / 2.0, self._length, self._length), 1)
+    def draw(self, screen:pygame.display,color:tuple[int])->None:
+        pygame.draw.rect(screen, color, pygame.Rect(self._xmid - self._length / 2.0, self._ymid - self._length / 2.0, self._length, self._length), 1)
     
     def __str__(self)->str:       
         var1 = "\n"

@@ -10,7 +10,7 @@ import sys
 sys.setrecursionlimit(3000)
 
 class Simulation:
-    __slots__ = ['bodies', 'dt', 'radius', 'N']
+    __slots__ = ['bodies', 'dt', 'radius', 'N','reCenter']
     WIDTH:int = 800
     HEIGHT:int = 800
     def __init__(self, bodies:list[Body], dt:float, radius:float) -> None:
@@ -18,6 +18,8 @@ class Simulation:
         self.dt = dt
         self.radius = radius
         self.N = len(bodies)
+        self.reCenter = True
+        # self.collisionThreshold = collisionThreshold
 
     def simulate(self,Theta,drawBarnesHuts:bool = False,frames_per_second:int = 60) -> None:
         pygame.init()
@@ -44,7 +46,7 @@ class Simulation:
             # Display FPS
             fps = clock.get_fps()
             fps_text = font.render(f"FPS: {fps:.2f}", True, pygame.Color('white'))
-            numBodies_text = font.render(f"Number of bodies: {self.N}", True, pygame.Color('white'))
+            numBodies_text = font.render(f"Number of bodies: {tree.numBodies}", True, pygame.Color('white'))
             screen.blit(fps_text, (10, 10))
             screen.blit(numBodies_text, (10, 30))
 
@@ -63,25 +65,34 @@ class Simulation:
         # self.bruteForce(screen)
 
         # collision detection
-        self.bhHandleCollisions(tree)
-        # Cetnre of mass recentering. If the system run's away, you still see it. 
-        com_x = sum(body._rx*body._mass for body in self.bodies) / sum(body._mass for body in self.bodies)
-        com_y = sum(body._ry*body._mass for body in self.bodies) / sum(body._mass for body in self.bodies)
+        self.bhHandleCollisions(screen,tree)
+        if self.reCenter:
+            # Cetnre of mass recentering. If the system run's away, you still see it. 
+            offset = max([body.scaledRadius+5 for body in self.bodies])
+            com_x = sum(body._rx*body._mass for body in self.bodies) / sum(body._mass for body in self.bodies) + offset
+            com_y = sum(body._ry*body._mass for body in self.bodies) / sum(body._mass for body in self.bodies) + offset
+
+            for body in self.bodies:
+                body._rx += (screen.get_width()/2 - com_x)
+                body._ry += (screen.get_height()/2 - com_y)
 
         for body in self.bodies:
-            body._rx += (screen.get_width()/2 - com_x)
-            body._ry += (screen.get_height()/2 - com_y)               
+            body.update(self.dt)
+
+        for body in self.bodies:              
+            body.draw(screen)     
 
     def bhGravity(self, screen:pygame.display, tree:Tree)->None:
         for body in self.bodies:
-            body.draw(screen)
+            # body.draw(screen)
             body.resetForce()
             tree.updateForce(body)
-            body.update(self.dt)
+            # body.update(self.dt)
     
-    def bhHandleCollisions(self, tree:Tree):
+    def bhHandleCollisions(self,screen:pygame.display,tree:Tree)->None:
         for body in self.bodies:
-            tree.updateCollisions(body,threshold=100)
+            # body.draw(screen)
+            tree.updateCollisions(body,threshold=tree.numBodies/10)
 
     def bruteForceGravity(self, screen:pygame.display)->None:
         for body in self.bodies:
@@ -112,7 +123,7 @@ if __name__ == "__main__":
 
     bodies = []
     centre = np.array([Simulation.WIDTH / 2, Simulation.HEIGHT / 2])
-    SUN: Body = Body(centre[0]+10, centre[1]+10, 0.0, 0.0, 10**13, (255, 0, 0))
+    SUN: Body = Body(centre[0]+50, centre[1]+50, 0.0, 0.0, 10**13, (255, 0, 0))
     bodies.append(SUN)
     widthFactor = min(Simulation.WIDTH / 2, Simulation.HEIGHT / 2)
     nrings = 3
@@ -127,19 +138,19 @@ if __name__ == "__main__":
         radius = rings[i%nrings] + 1* np.random.randn()
         x = SUN._rx + radius * np.cos(theta)
         y = SUN._ry + radius * np.sin(theta)
-        v = np.sqrt(SUN.G * SUN._mass / radius)*0
+        v = np.sqrt(SUN.G * SUN._mass / radius)
         vx = -v * np.sin(theta)
         vy = v * np.cos(theta)
         mass = masses[i%nrings]+max(0,np.random.randn()*10**3)
         body = Body(x, y, vx, vy, 10**10, (0, 255, 0))
         bodies.append(body)
 
-    for i in range(1000):
+    for i in range(100):
         theta = 2 * np.pi * np.random.random()
         radius = rings[i%nrings] + 1* np.random.randn()
         x = SUN._rx + radius * np.cos(theta)
         y = SUN._ry + radius * np.sin(theta)
-        v = np.sqrt(SUN.G * SUN._mass / radius**2)
+        v = np.sqrt(SUN.G * SUN._mass / radius)
         vx = -v * np.sin(theta)
         vy = v * np.cos(theta)
         mass = masses[i%nrings]+max(0,np.random.randn()*10**3)
@@ -166,5 +177,5 @@ if __name__ == "__main__":
 
     # print(bodies)
 
-    sim = Simulation(bodies, dt =1, radius=Simulation.WIDTH)
-    sim.simulate(Theta = float('inf'), drawBarnesHuts = False, frames_per_second = 60)
+    sim = Simulation(bodies, dt =0.1, radius=Simulation.WIDTH)
+    sim.simulate(Theta = float('inf'),drawBarnesHuts = False, frames_per_second = 120)

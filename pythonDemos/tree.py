@@ -161,7 +161,9 @@ class Tree:
 
     def draw(self, screen:pygame.display)->None:
         if self.numBodies == 1:
-            self._quad.draw(screen)
+            self._quad.draw(screen,color = (255,0,0))
+        else:
+            self._quad.draw(screen,color=(255,255,255))
         if not self.isExternal():
             self._NW.draw(screen)
             self._NE.draw(screen)
