@@ -10,9 +10,12 @@ public class Body{
     private double vx, vy;
     private double mass;
     private Color color;
+    public Color SwitchColor = Color.YELLOW;
     private double radius;
     private double fx, fy;
     public Integer overRiddenRadius;
+    public boolean collided = false;
+    public boolean changeColorOnCollision = false;
 
     public Body(double rx, double ry, double vx, double vy, double mass, Color color){
         this.rx = rx;
@@ -89,11 +92,12 @@ public class Body{
 
     public void collide(Body other){
         privateCollide(this,other);
+        this.collided = true;
     }
 
-    public void updatePosition(double x, double y){
-        this.rx += x;
-        this.ry += y;
+    public void setPosition(double x, double y){
+        this.rx = x;
+        this.ry = y;
     }
 
     public static void privateCollide(Body b1, Body b2){
@@ -164,9 +168,12 @@ public class Body{
     public void draw(Graphics g){
         int posX = (int) Math.round(this.rx);
         int posY = (int) Math.round(this.ry);
+        Color _color = (this.changeColorOnCollision && this.collided) ? this.SwitchColor : this.color;
 
-        g.setColor(this.color);
+        g.setColor(_color);
         g.fillOval(posX - this.scaledRadius(), posY - this.scaledRadius(), 2 * this.scaledRadius(), 2 * this.scaledRadius());
+        this.collided = false;
+
     }
     //getters
     public double getX(){

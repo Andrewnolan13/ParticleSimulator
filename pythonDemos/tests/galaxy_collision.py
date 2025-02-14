@@ -30,7 +30,7 @@ def main():
 
     nrings = len(rings)
     randomDistribution = sorted(np.random.randn(1000)) # sort it first to make collisions happen quicker
-    for i in range(1000):
+    for i in range(100):
         theta = 2 * np.pi * np.random.random()
         radius = rings[i%nrings] + 15 * randomDistribution[i]
         x = radius * np.cos(theta)
@@ -56,7 +56,7 @@ def main():
 
     nrings = len(rings)
     randomDistribution = sorted(np.random.randn(1000)) # sort it first to make collisions happen quicker
-    for i in range(1000):
+    for i in range(100):
         theta = 2 * np.pi * np.random.random()
         radius = rings[i%nrings] + 15 * randomDistribution[i]
         x = Simulation.WIDTH + radius * np.cos(theta)
