@@ -1,3 +1,11 @@
+import sys
+import os
+
+thisDir = os.path.dirname(os.path.abspath(__file__))
+upDir = os.path.dirname(thisDir)
+sys.path.append(upDir)
+
+
 from body import Body
 from simulation import Simulation
 
@@ -22,7 +30,7 @@ def main():
 
     nrings = len(rings)
     randomDistribution = sorted(np.random.randn(1000)) # sort it first to make collisions happen quicker
-    for i in range(100):
+    for i in range(1000):
         theta = 2 * np.pi * np.random.random()
         radius = rings[i%nrings] + 15 * randomDistribution[i]
         x = radius * np.cos(theta)
@@ -48,7 +56,7 @@ def main():
 
     nrings = len(rings)
     randomDistribution = sorted(np.random.randn(1000)) # sort it first to make collisions happen quicker
-    for i in range(100):
+    for i in range(1000):
         theta = 2 * np.pi * np.random.random()
         radius = rings[i%nrings] + 15 * randomDistribution[i]
         x = Simulation.WIDTH + radius * np.cos(theta)
@@ -66,7 +74,7 @@ def main():
         bodies.append(body)
 
     sim = Simulation(bodies,dt=1,radius=Simulation.WIDTH)
-    sim.simulate(Theta=1,drawBarnesHuts=True,frames_per_second=60)
+    sim.simulate(Theta=1,drawBarnesHuts=False,frames_per_second=60)
 
 if __name__ == "__main__":
     main()

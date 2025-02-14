@@ -4,10 +4,12 @@ from quad import Quad
 import pygame
 import numpy as np
 
+
 class Simulation:
     WIDTH:int = 800
     HEIGHT:int = 800
     WALL_DAMPING:float = 0.4
+    MASS_GROWTH:float = 10**6
 
     __placingParticle:bool = False
     def __init__(self, bodies:list[Body], dt:float, radius:float) -> None:
@@ -17,13 +19,14 @@ class Simulation:
         self.N = len(bodies)
 
         #default options
-        self.reCenter = True
-        self.gravitationalForce = True
-        self.collisionDetection = True
-        self.boundaryCollisions = False
-        self._localGravity:float = None
+        self.reCenter:bool = True
+        self.gravitationalForce:bool = True
+        self.collisionDetection:bool = True
+        self.boundaryCollisions:bool = False
+        self.pruning:bool = False # check if  particle is outside the screen. If so, delete it.
 
-        self._algorithm = "Barnes-Hut"
+        self._localGravity:float = None
+        self._algorithm:str = "Barnes-Hut"
     
     @property
     def algorithm(self)->str:
@@ -45,6 +48,23 @@ class Simulation:
             raise ValueError("Local gravity must be positive)")
         self._localGravity = value
 
+    def __configure(self)->None:
+        functions = []
+        if self.gravitationalForce == True:
+            functions.append(self.__bhGravity if self.algorithm == "Barnes-Hut" else self.__bruteForceGravity)
+        if self.collisionDetection == True:
+            functions.append(self.__bhHandleCollisions)
+        if self.boundaryCollisions == True:
+            functions.append(self.__handleBoundaryCollisions)
+        if self.localGravity is not None:
+            functions.append(self.__handleLocalGravity)
+        if self.reCenter == True:
+            functions.append(self.__reCentre)
+        functions.append(lambda *args, **kwargs: [body.update(self.dt) for body in self.bodies])
+        if self.pruning == True:
+            functions.append(self.__prune)
+        self.__updatePhysics:callable = lambda *args, **kwargs: [f(*args, **kwargs) for f in functions] 
+
     def simulate(self,Theta,drawBarnesHuts:bool = False,frames_per_second:int = 60) -> None:
         pygame.init()
         screen = pygame.display.set_mode((Simulation.WIDTH, Simulation.HEIGHT),pygame.RESIZABLE)
@@ -52,8 +72,8 @@ class Simulation:
         font = pygame.font.SysFont("Arial", 18)
 
         self.running = True
-        # self.last_added_time = 0
-
+        # configure options. Don't want to be checing conditions on every iteration
+        self.__configure()
         while self.running:
             # handle events like adding bodies, quitting, etc.
             self.handlePygameEvents()
@@ -94,13 +114,15 @@ class Simulation:
                 x2,y2 = pygame.mouse.get_pos()
                 dx = x2 - x1
                 dy = y2 - y1
+                dx = np.sign(dx) if abs(dx)<1 else dx
+                dy = np.sign(dy) if abs(dy)<1 else dy
                 # slingshot effect
                 dx = -dx 
                 dy = -dy
                 
                 # mass
                 finishTime = pygame.time.get_ticks()
-                mass = (finishTime - self.__startPlacingParticleTime)*10**10
+                mass = (finishTime - self.__startPlacingParticleTime)*self.MASS_GROWTH
                 # add body
                 newBody = Body(x1, y1, dx, dy, mass, (0, 0, 255))
                 newBody.overRiddenRadius = max(5,newBody.scaledRadius)
@@ -113,34 +135,15 @@ class Simulation:
         screen.fill((0, 0, 0))
         if drawBarnesHuts:
             tree.draw(screen)
-        #update forces and positions
-        if self.gravitationalForce:
-            if self.algorithm == "Brute Force":
-                self.__bruteForceGravity()
-            elif self.algorithm == "Barnes-Hut":
-                self.__bhGravity(tree)
+        # update physics
+        self.__updatePhysics(tree=tree,screen=screen)
         
-        # collision detection
-        if self.collisionDetection:
-            self.__bhHandleCollisions(tree)
-        #boundary collisions
-        if self.boundaryCollisions:
-            self.__handleBoundaryCollisions(screen)
-        #local gravity
-        if self.localGravity:
-            self.__handleLocalGravity()
-        # Centre of mass recentering. If the system run's away, you still see it. 
-        if self.reCenter:
-            self.__reCentre(screen)
-        # Update forces and positions
-        for body in self.bodies:
-            body.update(self.dt)
         #draw user input:
         if self.__placingParticle and self.__start_pos:
             x1,y1 = self.__start_pos
             x2,y2 = pygame.mouse.get_pos()
             pygame.draw.line(screen, (255, 255, 255), (x1, y1), (x2, y2), 2)
-            mass = (pygame.time.get_ticks() - self.__startPlacingParticleTime)*10**10
+            mass = (pygame.time.get_ticks() - self.__startPlacingParticleTime)*self.MASS_GROWTH
             radius = mass**(1/3)
             radius = min(25,max(5, radius/1000))
             pygame.draw.circle(screen, (0, 0, 255), (x1, y1), radius)
@@ -149,13 +152,12 @@ class Simulation:
         for body in self.bodies:              
             body.draw(screen)  
            
-    
-    def __bhGravity(self, tree:Tree)->None:
+    def __bhGravity(self, tree:Tree,*args,**kwargs)->None:
         for body in self.bodies:
             body.resetForce()
             tree.updateForce(body)
     
-    def __bruteForceGravity(self)->None:
+    def __bruteForceGravity(self,*args,**kwargs)->None:
         for i in range(self.N):
             self.bodies[i].resetForce()
 
@@ -164,11 +166,11 @@ class Simulation:
                 self.bodies[i].addForce(self.bodies[j])
                 self.bodies[j].addForce(self.bodies[i])
     
-    def __bhHandleCollisions(self,tree:Tree)->None:
+    def __bhHandleCollisions(self,tree:Tree,*args,**kwargs)->None:
         for body in self.bodies:
             tree.updateCollisions(body,threshold=tree.numBodies/10)
 
-    def __reCentre(self,screen:pygame.display)->None:
+    def __reCentre(self,screen:pygame.display,*args,**kwargs)->None:
         # Cetnre of mass recentering. If the system run's away, you still see it. 
         offset = max([body.scaledRadius+5 for body in self.bodies])
         com_x = sum(body._rx*body._mass for body in self.bodies) / sum(body._mass for body in self.bodies) + offset
@@ -178,7 +180,7 @@ class Simulation:
             body._rx += (screen.get_width()/2 - com_x)
             body._ry += (screen.get_height()/2 - com_y)
 
-    def __handleBoundaryCollisions(self,screen:pygame.display)->None:
+    def __handleBoundaryCollisions(self,screen:pygame.display,*args,**kwargs)->None:
         for body in self.bodies:
             if body._rx - body.scaledRadius < 0 or body._rx + body.scaledRadius > screen.get_width():
                 correctDirection = 1 if body._rx - body.scaledRadius < 0 else -1
@@ -200,9 +202,13 @@ class Simulation:
                     body._ry = screen.get_height() - body.scaledRadius
 
 
-    def __handleLocalGravity(self)->None:
+    def __handleLocalGravity(self,tree:Tree,*args,**kwargs)->None:
         for body in self.bodies:
-            body._vy += self.localGravity
+            if body.inQuad(tree._quad):
+                body._vy += self.localGravity
+    
+    def __prune(self,tree:Tree,**kwargs)->None:
+        self.bodies = [body for body in self.bodies if body.inQuad(tree._quad)]
     
 
 
@@ -267,6 +273,6 @@ if __name__ == "__main__":
     # print(bodies)
 
     sim = Simulation(bodies, dt =1, radius=Simulation.WIDTH)
-    sim.collisionDetection = False
+    sim.collisionDetection = True
     # sim.algorithm = 'Brute Force'
     sim.simulate(Theta = float('inf'),drawBarnesHuts = False, frames_per_second = 30)
