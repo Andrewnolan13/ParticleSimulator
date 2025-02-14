@@ -25,7 +25,7 @@ public class Simulation extends JPanel implements ActionListener {
     public Simulation(List<Body> bodies, double dt, double radius, Double Theta) {
         this.bodies = bodies;
         this.dt = dt;
-        this.timer = new Timer(16, this); // Roughly 60 FPS
+        this.timer = new Timer(utils.framesPerSecondToMillisecondsPerFrame(600), this); // Roughly 60 FPS
         this.Theta = Theta;
         lastTime = System.currentTimeMillis();
     }
@@ -91,39 +91,33 @@ public class Simulation extends JPanel implements ActionListener {
         }
         // collision detection
         for(Body body:this.bodies){
-            tree.updateCollisions(body, tree.numBodies/10);
+            tree.updateCollisions(body, 10);
         }
         //recenter
         double offset = 0;
         for(Body body:this.bodies){
             offset = Math.max(body.scaledRadius(), offset);
         }
-        double com_x = 0;
-        double com_y = 0;
-        // double total_mass = 0;
+        // double com_x = 0;
+        // double com_y = 0;
+        // com_x = this.tree.centreOfMass().first;
+        // com_y = this.tree.centreOfMass().second;
+        // com_x = com_x / tree.getMass() + offset;
+        // com_y = com_y / tree.getMass() + offset;
         // for(Body body:this.bodies){
-        //     com_x += body.getX() * body.getMass();
-        //     com_y += body.getY() * body.getMass();
-        //     total_mass += body.getMass();
+        //     body.updatePosition(this.getWidth()/2 - com_x, this.getHeight()/2 - com_y);
+        //     // check nan
+        //     if(Double.isNaN(body.getX()) || Double.isNaN(body.getY())){
+        //         System.out.println(this.getWidth()/2 - com_x);
+        //         System.out.println(this.getHeight()/2 - com_y);
+        //         System.out.println(body.getX());
+        //         System.out.println(body.getY());
+        //         System.out.println(tree.getMass());
+        //         System.out.println(tree.centreOfMass());
+        //         System.out.println("NAN");
+        //         System.exit(0);
+        //     }
         // }
-        com_x = this.tree.centreOfMass().first;
-        com_y = this.tree.centreOfMass().second;
-        com_x = com_x / tree.getMass() + offset;
-        com_y = com_y / tree.getMass() + offset;
-        for(Body body:this.bodies){
-            body.updatePosition(this.getWidth()/2 - com_x, this.getHeight()/2 - com_y);
-            // check nan
-            if(Double.isNaN(body.getX()) || Double.isNaN(body.getY())){
-                System.out.println(this.getWidth()/2 - com_x);
-                System.out.println(this.getHeight()/2 - com_y);
-                System.out.println(body.getX());
-                System.out.println(body.getY());
-                System.out.println(tree.getMass());
-                System.out.println(tree.centreOfMass());
-                System.out.println("NAN");
-                System.exit(0);
-            }
-        }
         //update positions
         for(Body body:this.bodies){
             body.update(this.dt);
@@ -131,22 +125,6 @@ public class Simulation extends JPanel implements ActionListener {
 
     }
     
-    // @Override
-    // protected void paintComponent(Graphics g) {
-    //     super.paintComponent(g);
-    //     g.setColor(Color.WHITE);
-    //     g.setFont(new Font("Arial", Font.PLAIN, 2000));
-    //     g.drawString("FPS: " + fps, 10, 20);
-    //     g.drawString("Number of bodies: " + N, 10, 40);
-        
-        
-    //     g.setColor(Color.BLACK);
-    //     g.fillRect(0, 0, getWidth(), getHeight());
-    //     for (Body body : bodies) {
-    //         body.draw(g);
-    //     }
-    //     System.out.println(fps);
-    // }
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -168,5 +146,11 @@ public class Simulation extends JPanel implements ActionListener {
         for (Body body : bodies) {
             body.draw(g);
         }
+    }
+}
+
+class utils{
+    public static int framesPerSecondToMillisecondsPerFrame(double fps) {
+        return (int) (1000.0 / fps);
     }
 }
