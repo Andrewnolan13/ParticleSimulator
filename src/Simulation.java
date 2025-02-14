@@ -1,44 +1,35 @@
 import java.awt.*;
 import java.awt.event.*;
-// import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
 
-public class Simulation extends JPanel implements ActionListener {
+public class Simulation extends Window{
     public static final int WIDTH = 800;
     public static final int HEIGHT = 800;
 
-    
-    private List<Body> bodies;
     private double dt;
     private Double Theta;
     private Double localGravity = null;
     private String algorithm = "Barnes-Hut";
-    private Timer timer;
-    private double fps;
-    private long lastTime;
-    private long N;
-    public Tree tree;
 
-    public Simulation(List<Body> bodies, double dt, double radius, Double Theta) {
-        this.bodies = bodies;
+    public Simulation(List<Body> bodies, double dt, Double Theta, double fps) {
+        super(bodies,fps);
         this.dt = dt;
-        this.timer = new Timer(utils.framesPerSecondToMillisecondsPerFrame(60), this); // Roughly 60 FPS
         this.Theta = Theta;
-        lastTime = System.currentTimeMillis();
     }
+    public Simulation(List<Body> bodies, double dt, Double Theta) {
+        this(bodies, dt, Theta, 60);
+    }
+    public Simulation(List<Body> bodies, double dt) {
+        this(bodies, dt, Double.POSITIVE_INFINITY);
+    }
+
     //getters and setters
-    public String getAlgorithm() {
-        return algorithm;
-    }
     public void setAlgorithm(String algorithm) {
         if (!algorithm.equals("Barnes-Hut") && !algorithm.equals("Brute Force")) {
             throw new IllegalArgumentException("Algorithm must be either 'Barnes-Hut' or 'Brute Force'");
         }
         this.algorithm = algorithm;
-    }
-    public Double getLocalGravity() {
-        return localGravity;
     }
     public void setLocalGravity(Double localGravity) {
         if (localGravity != null && localGravity < 0) {
@@ -46,35 +37,18 @@ public class Simulation extends JPanel implements ActionListener {
         }
         this.localGravity = localGravity;
     }
-    // main
-    public void simulate() {
-        JFrame frame = new JFrame("N-Body Simulation");
-        frame.setSize(WIDTH, HEIGHT);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.add(this);
-        frame.setVisible(true);
-        timer.start();
-    }
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        long currentTime = System.currentTimeMillis();
-        this.fps = 1000.0 / (currentTime - lastTime);
-        this.lastTime = currentTime;
-        updatePhysics();
-        repaint();
-    }
-    private void updatePhysics() {
+
+    protected void updatePhysics() {
         // build the tree
         int radius =(int) Math.max(this.getWidth(), this.getHeight());
         Quad quad = new Quad(this.getWidth()/2, this.getHeight()/2, radius); //TODO: extend to rectangular window
         this.tree = new Tree(quad, this.Theta);
         // insert bodies into the tree
-        for (Body body : bodies) {
+        for (Body body : this.bodies) {
             if(body.inQuad(quad)) {
-                tree.insert(body);
+                this.tree.insert(body);
             }
         }
-        this.N = tree.numBodies;
         //bhGravity
         // for(Body body : this.bodies){
         //     body.resetForce();
@@ -110,34 +84,7 @@ public class Simulation extends JPanel implements ActionListener {
             body.update(this.dt);
         }
 
-    }
-    
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        
-        // Set background color to black
-        g.setColor(Color.BLACK);
-        g.fillRect(0, 0, getWidth(), getHeight());
-    
-        // Set text color to white
-        g.setColor(Color.WHITE);
-        g.drawString("FPS: " + (int)this.fps, 10, 20);
-        g.drawString("Number of bodies: " + this.N, 10, 40);
-        
-        // Draw the tree
-        if (this.tree != null) {
-            // this.tree.draw(g);
-        }
-        // Draw bodies
-        for (Body body : bodies) {
-            body.draw(g);
-        }
-    }
+    } 
 }
 
-class utils{
-    public static int framesPerSecondToMillisecondsPerFrame(double fps) {
-        return (int) (1000.0 / fps);
-    }
-}
+
