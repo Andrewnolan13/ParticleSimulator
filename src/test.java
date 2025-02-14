@@ -10,9 +10,31 @@ import java.awt.Color;
 public class test {
     public static void main(String[] args) {
         System.out.println("Hello, World!");
+        // galaxyCollision();
         // ballThroughDust();
         windStream();
+        // dropTest();
     }
+    public static void dropTest(){
+        // really boring, just two balls falling down. One has bigger mass than the other. 
+        // the should accelerate at the same rate.
+        List<Body> bodies = new ArrayList<>();
+        Body b1 = new Body(400, 100, 0, 0, 1000000000000000000000.0, Color.RED);
+        Body b2 = new Body(600, 100, 0, 0, 1, Color.BLUE);
+        b1.overRiddenRadius = 10;
+        b2.overRiddenRadius = 10;
+        b1.elastic = 0.9;
+        b2.elastic = 0.9;
+        bodies.add(b1);
+        bodies.add(b2);
+        Simulation sim = new Simulation(bodies, 1, Double.POSITIVE_INFINITY);
+        sim.setLocalGravity(0.6);
+        sim.wallCollisions = true;
+        sim.graviationalForceField = false;
+        sim.interParticleCollisions = false;
+        sim.simulate();
+
+    } 
     public static void windStream() {
         // 50k particles moving from left to right. There is a ball in the middle.
         //Ball has radius 10. So the stream should have height 20.
@@ -25,7 +47,7 @@ public class test {
 
         List<Body> bodies = new ArrayList<>();
 
-        Body Ball = new Body(centreX,centreY,0,0,10000,Color.RED);
+        Body Ball = new Body(centreX,centreY,0,0,100,Color.RED);
         Ball.overRiddenRadius = radiusBall;
         bodies.add(Ball);
         Ball.elastic = 0.0;
@@ -33,7 +55,7 @@ public class test {
         Body Ball2 = new Body(
             centreX+Math.sqrt(2*Ball.scaledRadius()),
             centreY+Math.sqrt(2*Ball.scaledRadius()),
-            0,0,10000,Color.RED);
+            0,0,100,Color.RED);
         
         Ball2.overRiddenRadius = radiusBall;
         bodies.add(Ball2);
@@ -42,13 +64,11 @@ public class test {
         Body Ball3 = new Body(
             centreX+Math.sqrt(2*Ball.scaledRadius()),
             centreY-Math.sqrt(2*Ball.scaledRadius()),
-            0,0,10000,Color.RED);
+            0,0,100,Color.RED);
         
         Ball3.overRiddenRadius = radiusBall;
         bodies.add(Ball3);
         Ball3.elastic = 0.0;
-
-
 
         int numBodies = 5000;
         double mass =1.0/numBodies;
@@ -74,20 +94,14 @@ public class test {
             }     
         }
 
-        // //windshieled
-        // x = centreX-100;
-        // y = centreY+20;
-        // for(int i = 0; i<30;i++){
-        //     x+=2*Math.sqrt(2);
-        //     y-=2*Math.sqrt(2);
-        //     Body b = new Body(x, y, 0, 0, 1000.0, Color.RED);
-        //     b.overRiddenRadius = 2;
-        //     b.elastic = 0.0;    
-        //     bodies.add(b);
-        // }
-
-
         Simulation sim = new Simulation(bodies, 1, Double.POSITIVE_INFINITY);
+        // sim.setAlgorithm("Brute Force"); 1FPS at 5k particles. 40-50 FPS at 5k particles with Barnes-Hut
+        sim.interParticleCollisions = true;
+        sim.graviationalForceField = false;
+        sim.reCenter = false;
+        sim.drawTree = false;
+        sim.wallCollisions = false;
+        sim.setLocalGravity(0.01);
         sim.simulate();
 
     }
@@ -125,6 +139,9 @@ public class test {
         }
 
         Simulation sim = new Simulation(bodies, 1,Double.POSITIVE_INFINITY);
+        sim.interParticleCollisions = true;
+        sim.graviationalForceField = false;
+        sim.wallCollisions = true;
         sim.simulate();
     }
 
@@ -137,17 +154,12 @@ public class test {
 
         List<Body> bodies = new ArrayList<>();
         double sunSpeed = 0;
-        Body SUN1 = new Body(400, 200, sunSpeed, sunSpeed, Math.pow(10, 12), new Color(255,0,0));
-        SUN1.overRiddenRadius = 1;
+        Body SUN1 = new Body(400, 200, sunSpeed, sunSpeed, Math.pow(10, 13), new Color(255,0,0));
         bodies.add(SUN1);
         
         double widthFactor = Math.min(Simulation.WIDTH / 2.0, Simulation.HEIGHT / 2.0);
         // double[] rings = {widthFactor * 0.125, widthFactor * 0.25, widthFactor * 0.5, widthFactor * 0.625, widthFactor * 0.75, widthFactor * 0.875};
         double[] rings = {widthFactor * 0.33, widthFactor * 0.40, widthFactor * 0.50};
-        Color [] colors = {
-            new Color(255, 255, 255), new Color(255, 255, 0), new Color(0, 255, 255),
-            new Color(255, 0, 255), new Color(0, 255, 0), new Color(0, 0, 255)
-        };
         
         int nSatellites = 2500;
         int nrings = rings.length;
@@ -161,7 +173,7 @@ public class test {
         
         for (int i = 0; i < nSatellites; i++) {
             double theta = 2 * Math.PI * rand.nextDouble();
-            double radius = rings[i % nrings] + 15 * randomDistribution[i];
+            double radius = rings[i % nrings] + randomDistribution[i];
             double x = radius * Math.cos(theta)+SUN1.getX();
             double y = radius * Math.sin(theta)+SUN1.getY();
             
@@ -169,16 +181,18 @@ public class test {
             double vx = -v * Math.sin(theta)+sunSpeed;
             double vy = v * Math.cos(theta)+sunSpeed;
             
-            bodies.add(new Body(x, y, vx, vy, 10E8, colors[i % nrings]));
+            Body b = new Body(x, y, vx, vy, 1, Color.WHITE);
+            b.changeColorOnCollision = true;
+            b.SwitchColor = Color.YELLOW;
+            bodies.add(b);
         }
 
-        Body SUN2 = new Body(400, Simulation.HEIGHT-250, -sunSpeed, -sunSpeed, Math.pow(10, 12), new Color(255,0,0));
+        Body SUN2 = new Body(400, Simulation.HEIGHT-250, -sunSpeed, -sunSpeed, Math.pow(10, 13), new Color(255,0,0));
         bodies.add(SUN2);
-        SUN2.overRiddenRadius = 1;
         
         for (int i = 0; i < nSatellites; i++) {
             double theta = 2 * Math.PI * rand.nextDouble();
-            double radius = rings[i % nrings] + 15 * randomDistribution[i];
+            double radius = rings[i % nrings] + randomDistribution[i];
             double x = radius * Math.cos(theta)+SUN2.getX();
             double y = radius * Math.sin(theta)+SUN2.getY();
             
@@ -186,10 +200,17 @@ public class test {
             double vx = -v * Math.sin(theta)-sunSpeed;
             double vy = v * Math.cos(theta)-sunSpeed;
             
-            bodies.add(new Body(x, y, vx, vy, 10E8, colors[i % nrings]));
+            Body b = new Body(x, y, vx, vy, 1, Color.WHITE);
+            b.changeColorOnCollision = true;
+            b.SwitchColor = Color.YELLOW;
+            bodies.add(b);
         }
         
         Simulation sim = new Simulation(bodies, 0.5);
+        // sim.interParticleCollisions = true;
+        sim.graviationalForceField = true;
+        // sim.setAlgorithm("Brute Force"); //2FPS at 5k particles. 40-50 FPS at 5k particles with Barnes-Hut
+        // sim.reCenter = true;
         sim.simulate();
     }
 }

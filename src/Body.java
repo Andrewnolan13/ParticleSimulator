@@ -43,18 +43,37 @@ public class Body{
     }
 
     public void update(double dt){
-        double k1 = this.fx / this.mass;
-        double l1 = this.fy / this.mass;
-        double k2 = (this.fx + 0.5 * k1) / this.mass;
-        double l2 = (this.fy + 0.5 * l1) / this.mass;
-        double k3 = (this.fx + 0.5 * k2) / this.mass;
-        double l3 = (this.fy + 0.5 * l2) / this.mass;
-        double k4 = (this.fx + k3) / this.mass;
-        double l4 = (this.fy + l3) / this.mass;
-        this.vx += dt * (k1 + 2 * k2 + 2 * k3 + k4) / 6;
-        this.vy += dt * (l1 + 2 * l2 + 2 * l3 + l4) / 6;
-        this.rx += dt * this.vx;
-        this.ry += dt * this.vy;
+        /*
+         * commented out runhe kutta integration because it makes small particles
+         * accelerate differenelty to larger particles. 
+         * I don't really care too much about the accuracy of the integration in the gravity sims to sacrifice having realistic physics for small particle sims.
+         * so I'm just using good ole newtonian mechanics equations. And assuming constant acceleration during the frame.
+         * 
+         */
+        // double k1 = this.fx / this.mass;
+        // double l1 = this.fy / this.mass;
+        // double k2 = (this.fx + 0.5 * k1) / this.mass;
+        // double l2 = (this.fy + 0.5 * l1) / this.mass;
+        // double k3 = (this.fx + 0.5 * k2) / this.mass;
+        // double l3 = (this.fy + 0.5 * l2) / this.mass;
+        // double k4 = (this.fx + k3) / this.mass;
+        // double l4 = (this.fy + l3) / this.mass;
+        // this.vx += dt * (k1 + 2 * k2 + 2 * k3 + k4) / 6;
+        // this.vy += dt * (l1 + 2 * l2 + 2 * l3 + l4) / 6;
+        // this.rx += dt * this.vx;
+        // this.ry += dt * this.vy;
+
+        // assuming constant acceleration
+        // s = ut + 1/2at^2
+
+        // travelled during frame
+        this.rx += dt * this.vx + 0.5 * dt * dt * this.fx / this.mass;
+        this.ry += dt * this.vy + 0.5 * dt * dt * this.fy / this.mass;
+
+        // accelerated during frame
+        this.vx += dt * this.fx / this.mass;
+        this.vy += dt * this.fy / this.mass;
+
     }
 
     public double distanceTo(Body b){
@@ -77,6 +96,11 @@ public class Body{
         this.fy += F * dy / dist;
     }
 
+    public void addForce(double fx, double fy){
+        this.fx += fx;
+        this.fy += fy;
+    }
+
     public boolean inQuad(Quad q){
         return q.contains(this.rx, this.ry);
     }
@@ -93,11 +117,6 @@ public class Body{
     public void collide(Body other){
         privateCollide(this,other);
         this.collided = true;
-    }
-
-    public void setPosition(double x, double y){
-        this.rx = x;
-        this.ry = y;
     }
 
     public static void privateCollide(Body b1, Body b2){
@@ -182,8 +201,24 @@ public class Body{
     public double getY(){
         return this.ry;
     }
+    public double getVx(){
+        return this.vx;
+    }
+    public double getVy(){
+        return this.vy;
+    }
     public double getMass(){
         return this.mass;
     }
+    //setters
+    public void setPosition(double x, double y){
+        this.rx = x;
+        this.ry = y;
+    }
+    public void setVelocity(double vx, double vy){
+        this.vx = vx;
+        this.vy = vy;
+    }
+
 
 }

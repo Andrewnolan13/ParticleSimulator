@@ -176,4 +176,8 @@ public class Tree{
             return res;
         }
     }
+
+    public boolean contains(Body b){
+        return b.inQuad(quad);
+    }
 }
