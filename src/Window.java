@@ -22,7 +22,8 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
     double currentTime;
     double fps;
     public boolean drawTree = false;
-    
+    private int numIters = 0;
+
     // need for drawing arrows for adding particles through GUI
     private Point startPoint = null;
     // private Point endPoint = null;
@@ -50,7 +51,11 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
         this.fps = 1000.0 / (_currentTime - this.lastTime);
         this.lastTime = _currentTime;
         this.updatePhysics();
-        this.repaint();
+        if(this.numIters % 2 == 0){ // only repaint every 2 iters. Why? because it's slow to repaint. It essentially doubles the forward pass speed to skip a frame. So you essentially achive the same FPS anyway.
+            this.repaint();
+        }
+        this.numIters++;
+        
     }
     @Override
     protected void paintComponent(Graphics g) {

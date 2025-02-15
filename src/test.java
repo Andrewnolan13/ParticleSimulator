@@ -82,8 +82,8 @@ public class test {
         //Ball has radius 10. So the stream should have height 20.
 
         double centreX, centreY,heightOfStream;
-        int radiusBall = 4;
-        heightOfStream = radiusBall*5;  
+        int radiusBall = 10;
+        heightOfStream = radiusBall*2;  
         centreX = 168;
         centreY = 394.5;
 
@@ -92,25 +92,25 @@ public class test {
         Body Ball = new Body(centreX,centreY,0,0,100,Color.RED);
         Ball.overRiddenRadius = radiusBall;
         bodies.add(Ball);
-        Ball.elastic = 0.0;
+        Ball.elastic = 1.0;
 
-        Body Ball2 = new Body(
-            centreX+Math.sqrt(2*Ball.scaledRadius()),
-            centreY+Math.sqrt(2*Ball.scaledRadius()),
-            0,0,100,Color.RED);
+        // Body Ball2 = new Body(
+        //     centreX+Math.sqrt(2*Ball.scaledRadius()),
+        //     centreY+Math.sqrt(2*Ball.scaledRadius()),
+        //     0,0,100,Color.RED);
         
-        Ball2.overRiddenRadius = radiusBall;
-        bodies.add(Ball2);
-        Ball2.elastic = 0.0;
+        // Ball2.overRiddenRadius = radiusBall;
+        // bodies.add(Ball2);
+        // Ball2.elastic = 0.0;
 
-        Body Ball3 = new Body(
-            centreX+Math.sqrt(2*Ball.scaledRadius()),
-            centreY-Math.sqrt(2*Ball.scaledRadius()),
-            0,0,100,Color.RED);
+        // Body Ball3 = new Body(
+        //     centreX+Math.sqrt(2*Ball.scaledRadius()),
+        //     centreY-Math.sqrt(2*Ball.scaledRadius()),
+        //     0,0,100,Color.RED);
         
-        Ball3.overRiddenRadius = radiusBall;
-        bodies.add(Ball3);
-        Ball3.elastic = 0.0;
+        // Ball3.overRiddenRadius = radiusBall;
+        // bodies.add(Ball3);
+        // Ball3.elastic = 0.0;
 
         int numBodies = 50000;
         double mass =1.0/numBodies;
@@ -136,14 +136,15 @@ public class test {
             }     
         }
 
-        Simulation sim = new Simulation(bodies, 1, Double.POSITIVE_INFINITY);
+        Simulation sim = new Simulation(bodies, .1, Double.POSITIVE_INFINITY);
         // sim.setAlgorithm("Brute Force"); 1FPS at 5k particles. 40-50 FPS at 5k particles with Barnes-Hut
         sim.interParticleCollisions = true;
         sim.graviationalForceField = false;
         sim.reCenter = false;
         sim.drawTree = false;
         sim.wallCollisions = false;
-        sim.setLocalGravity(0.01);
+        sim.parallel = true;
+        // sim.setLocalGravity(0.01);
         sim.simulate();
 
     }
@@ -153,12 +154,12 @@ public class test {
         List<Body> bodies = new ArrayList<>();
         // int width = 75;
 
-        Body BowlingBall = new Body(450,100,0,3,1.0,Color.RED);
+        Body BowlingBall = new Body(780,780,0,0,10e12,Color.RED);
         BowlingBall.overRiddenRadius = 10;
         bodies.add(BowlingBall);        
         
-        int numBodies = 50000;
-        double mass =0.01;
+        int numBodies = 5000;
+        double mass =1.0/numBodies;
         int overRiddenRadius = 1;
 
         double NE = 450-Math.sqrt(numBodies)*overRiddenRadius;
@@ -181,8 +182,8 @@ public class test {
         }
 
         Simulation sim = new Simulation(bodies, 1,Double.POSITIVE_INFINITY);
-        sim.interParticleCollisions = true;
-        sim.graviationalForceField = false;
+        // sim.interParticleCollisions = true;
+        sim.graviationalForceField = true;
         sim.wallCollisions = true;
         sim.parallel = parallel;
         // sim.sortBodiesByMorton = true;
