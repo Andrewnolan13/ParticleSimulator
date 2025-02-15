@@ -5,16 +5,58 @@
 // }
 
 import java.util.*;
+
+
 import java.awt.Color;
 
 public class test {
     public static void main(String[] args) {
         System.out.println("Hello, World!");
-        // galaxyCollision();
-        // ballThroughDust();
-        windStream();
+        // galaxyCollision(false,false);
+        // galaxyCollision(false,true);
+        ballThroughDust(true);
+        // windStream();
         // dropTest();
+        // fluid();  
     }
+    public static void fluid(){
+        List<Body> bodies = new ArrayList<>();
+
+        int numBodies = 5000;
+        // double mass =1.0/numBodies;
+        int overRiddenRadius = 4;
+
+        double NE = 450-Math.sqrt(numBodies)*overRiddenRadius;
+        double x = 600;
+        double y = 250;
+        Random rand = new Random();
+        rand.setSeed(0);
+        for(int i = 0; i < Math.sqrt(numBodies)+1; i++){
+            for(int j = 0;j<Math.sqrt(numBodies)+1;j++){
+                x = (j>0)?x+overRiddenRadius*2:NE; // increment as j increases. reset to 400 when j = 0
+                y = (j==0)?y+overRiddenRadius*2:y; //increment as i increases. No need to reset 
+                double vx = 0;
+                double vy = 0;            
+                Color color = Color.WHITE;
+                Body b = new Body(x, y, vx, vy, rand.nextDouble(), color);
+                b.overRiddenRadius = overRiddenRadius;
+                // b.changeColorOnCollision = true;
+                // b.SwitchColor = new Color(255,255,255,125);
+                b.elastic = 0.9;
+                bodies.add(b);       
+            }
+        }
+
+        Simulation sim = new Simulation(bodies, 0.01,Double.POSITIVE_INFINITY);
+        sim.collisionThreshold = 50;
+        sim.interParticleCollisions = true;
+        sim.graviationalForceField = false;
+        sim.wallCollisions = true;
+        sim.setLocalGravity(98.0);
+        sim.simulate();
+        
+    }
+
     public static void dropTest(){
         // really boring, just two balls falling down. One has bigger mass than the other. 
         // the should accelerate at the same rate.
@@ -70,7 +112,7 @@ public class test {
         bodies.add(Ball3);
         Ball3.elastic = 0.0;
 
-        int numBodies = 5000;
+        int numBodies = 50000;
         double mass =1.0/numBodies;
         int overRiddenRadius = 1;
         double x = 0;
@@ -105,7 +147,7 @@ public class test {
         sim.simulate();
 
     }
-    public static void ballThroughDust() {
+    public static void ballThroughDust(boolean parallel) {
         // Ball flying through 50k particles. Good one to watch tbh.
 
         List<Body> bodies = new ArrayList<>();
@@ -116,7 +158,7 @@ public class test {
         bodies.add(BowlingBall);        
         
         int numBodies = 50000;
-        double mass =1.0/numBodies;
+        double mass =0.01;
         int overRiddenRadius = 1;
 
         double NE = 450-Math.sqrt(numBodies)*overRiddenRadius;
@@ -142,6 +184,9 @@ public class test {
         sim.interParticleCollisions = true;
         sim.graviationalForceField = false;
         sim.wallCollisions = true;
+        sim.parallel = parallel;
+        // sim.sortBodiesByMorton = true;
+        // sim.setLocalGravity(0.01);
         sim.simulate();
     }
 
@@ -149,7 +194,7 @@ public class test {
 
 
 
-    public static void galaxyCollision() {
+    public static void galaxyCollision(boolean sortBodiesByMorton, boolean parallel) {
         //set random seed
 
         List<Body> bodies = new ArrayList<>();
@@ -161,7 +206,7 @@ public class test {
         // double[] rings = {widthFactor * 0.125, widthFactor * 0.25, widthFactor * 0.5, widthFactor * 0.625, widthFactor * 0.75, widthFactor * 0.875};
         double[] rings = {widthFactor * 0.33, widthFactor * 0.40, widthFactor * 0.50};
         
-        int nSatellites = 2500;
+        int nSatellites = 25_000;
         int nrings = rings.length;
         Random rand = new Random();
         rand.setSeed(0);
@@ -207,10 +252,18 @@ public class test {
         }
         
         Simulation sim = new Simulation(bodies, 0.5);
+        sim.fps = 6000000000.0;
         // sim.interParticleCollisions = true;
+        sim.sortBodiesByMorton = sortBodiesByMorton;
+        sim.parallel = parallel;
         sim.graviationalForceField = true;
+        
         // sim.setAlgorithm("Brute Force"); //2FPS at 5k particles. 40-50 FPS at 5k particles with Barnes-Hut
         // sim.reCenter = true;
+        sim.updatePhysics();
+        sim.testConcurrency();
+        sim.testMorton();
+
         sim.simulate();
     }
 }

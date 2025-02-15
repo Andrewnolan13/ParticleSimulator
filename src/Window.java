@@ -9,7 +9,6 @@
  import java.awt.event.*;
  import java.util.List;
  import javax.swing.*;
- 
 
 public abstract class Window extends JPanel implements ActionListener, MouseListener  {
     public static final int WIDTH = 800;
@@ -26,7 +25,7 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
     
     // need for drawing arrows for adding particles through GUI
     private Point startPoint = null;
-    private Point endPoint = null;
+    // private Point endPoint = null;
     private boolean drawingArrow = false;    
 
     public Window(List<Body> bodies, double fps) {
@@ -124,9 +123,3 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
 }
     
 
-class utils{
-    public static int framesPerSecondToMillisecondsPerFrame(double fps) {
-        return (int) (1000.0 / fps);
-    }
-    
-}
