@@ -17,7 +17,7 @@ public class Simulation extends Window{
     public boolean reCenter = false; //not in-expensive, so false by default.
     public boolean wallCollisions = false;
     public boolean sortBodiesByMorton = false;
-    public boolean parallel = false;
+    public boolean parallel = true;
 
     private Double localGravity = null;
     private String algorithm = "Barnes-Hut";
@@ -97,6 +97,7 @@ public class Simulation extends Window{
     private void updateInterParticleCollisions(){
         if(this.algorithm.equals("Barnes-Hut")){
             if(this.parallel){
+            // if(true){
                 this.bodies.parallelStream()
                             .forEach(body -> this.tree.updateCollisions(body, this.collisionThreshold));
                 return;

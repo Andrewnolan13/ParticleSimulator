@@ -1,0 +1,10 @@
+lfmlfdamkalfmlefkmlkefmelakmf
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch main
+# Changes to be committed:
+#	modified:   bin/Window.class
+#	modified:   bin/test.class
+#	modified:   src/Window.java
+#	modified:   src/test.java
+#

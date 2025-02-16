@@ -51,9 +51,9 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
         this.fps = 1000.0 / (_currentTime - this.lastTime);
         this.lastTime = _currentTime;
         this.updatePhysics();
-        if(this.numIters % 2 == 0){ // only repaint every 2 iters. Why? because it's slow to repaint. It essentially doubles the forward pass speed to skip a frame. So you essentially achive the same FPS anyway.
-            this.repaint();
-        }
+        // if(this.numIters % 2 == 0){ // only repaint every 2 iters. Why? because it's slow to repaint. It essentially doubles the forward pass speed to skip a frame. So you essentially achive the same FPS anyway.
+        this.repaint();
+        // }
         this.numIters++;
         
     }
@@ -82,6 +82,7 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
         // Draw arrow if active
         // Draw the slingshot arrow if we're currently dragging
         if (drawingArrow && startPoint != null) {
+            System.out.println("Drawing arrow");
             Point current = getMousePosition(); // current mouse pos relative to this panel
             if (current != null) {
                 Graphics2D g2 = (Graphics2D) g;

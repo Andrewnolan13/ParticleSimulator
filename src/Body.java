@@ -6,10 +6,10 @@ public class Body{
     public double elastic = 1.0;
     public static double EPSILON = 10e-4;
 
-    private double rx, ry;
-    private double vx, vy;
-    private double mass;
-    private Color color;
+    protected double rx, ry;
+    protected double vx, vy;
+    protected double mass;
+    protected Color color;
     public Color SwitchColor = Color.YELLOW;
     private double radius;
     private double fx, fy;

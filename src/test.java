@@ -8,13 +8,15 @@ import java.util.*;
 
 
 import java.awt.Color;
+import java.awt.Graphics;
 
 public class test {
     public static void main(String[] args) {
         System.out.println("Hello, World!");
         // galaxyCollision(false,false);
-        // galaxyCollision(false,true);
-        ballThroughDust(true);
+        galaxy(true,true);
+        // galaxyCollision(true,true);
+        // ballThroughDust(true);
         // windStream();
         // dropTest();
         // fluid();  
@@ -154,11 +156,12 @@ public class test {
         List<Body> bodies = new ArrayList<>();
         // int width = 75;
 
-        Body BowlingBall = new Body(780,780,0,0,10e12,Color.RED);
+        Body BowlingBall = new Body(410,0,2,10,1,Color.RED);
         BowlingBall.overRiddenRadius = 10;
         bodies.add(BowlingBall);        
-        
-        int numBodies = 5000;
+        BowlingBall.elastic = 0.95;
+
+        int numBodies = 100000;
         double mass =1.0/numBodies;
         int overRiddenRadius = 1;
 
@@ -182,8 +185,8 @@ public class test {
         }
 
         Simulation sim = new Simulation(bodies, 1,Double.POSITIVE_INFINITY);
-        // sim.interParticleCollisions = true;
-        sim.graviationalForceField = true;
+        sim.interParticleCollisions = true;
+        // sim.graviationalForceField = true;
         sim.wallCollisions = true;
         sim.parallel = parallel;
         // sim.sortBodiesByMorton = true;
@@ -219,7 +222,7 @@ public class test {
         
         for (int i = 0; i < nSatellites; i++) {
             double theta = 2 * Math.PI * rand.nextDouble();
-            double radius = rings[i % nrings] + randomDistribution[i];
+            double radius = rings[i % nrings] + 15*randomDistribution[i];
             double x = radius * Math.cos(theta)+SUN1.getX();
             double y = radius * Math.sin(theta)+SUN1.getY();
             
@@ -238,7 +241,7 @@ public class test {
         
         for (int i = 0; i < nSatellites; i++) {
             double theta = 2 * Math.PI * rand.nextDouble();
-            double radius = rings[i % nrings] + randomDistribution[i];
+            double radius = rings[i % nrings] + 2*randomDistribution[i];
             double x = radius * Math.cos(theta)+SUN2.getX();
             double y = radius * Math.sin(theta)+SUN2.getY();
             
@@ -267,4 +270,126 @@ public class test {
 
         sim.simulate();
     }
+
+    public static void galaxy(boolean sortBodiesByMorton, boolean parallel) {
+        //set random seed
+
+        List<Body> bodies = new ArrayList<>();
+        double sunSpeed = 0;
+        StickyBody SUN1 = new StickyBody(400, 400, sunSpeed, sunSpeed, Math.pow(10, 15), new Color(255,0,0));
+        bodies.add(SUN1);
+        
+        double widthFactor = Math.min(Simulation.WIDTH / 2.0, Simulation.HEIGHT / 2.0);
+        // double[] rings = {widthFactor * 0.125, widthFactor * 0.25, widthFactor * 0.5, widthFactor * 0.625, widthFactor * 0.75, widthFactor * 0.875};
+        double[] rings = {widthFactor * 0.125, widthFactor * 0.25, widthFactor * 0.5, widthFactor * 0.625, widthFactor * 0.75, widthFactor * 0.875};
+        
+        int nSatellites = 100_000;
+        int nrings = rings.length;
+        Random rand = new Random();
+        rand.setSeed(0);
+        double[] randomDistribution = new double[nSatellites];
+        for (int i = 0; i < nSatellites; i++) {
+            randomDistribution[i] = rand.nextGaussian();
+        }
+        Arrays.sort(randomDistribution);
+        
+        for (int i = 0; i < nSatellites; i++) {
+            double theta = 2 * Math.PI * rand.nextDouble();
+            double radius = rings[i % nrings] + 15*randomDistribution[i];
+            double x = radius * Math.cos(theta)+SUN1.getX();
+            double y = radius * Math.sin(theta)+SUN1.getY();
+            
+            // double v = Math.sqrt(SUN1.G * SUN1.getMass() / Math.pow(radius, 1));
+            double vx =  -Math.sin(theta)+sunSpeed;
+            double vy =  Math.cos(theta)+sunSpeed;
+            
+            StickyBody b = new StickyBody(x, y, vx, vy, rand.nextGaussian(10E4,10E1)+(rand.nextDouble()<0.001?10E10:0), Color.WHITE);
+            b.changeColorOnCollision = true;
+            b.SwitchColor = Color.YELLOW;
+            bodies.add(b);
+        }
+
+        double total_mass = 0.0;
+        for (Body b : bodies) {
+            total_mass += b.getMass();
+        }
+        int i = 0;
+        for (Body b : bodies) {
+            if(i==0){
+                i+=1;
+                continue;
+            }
+            double v = (double) Math.sqrt(SUN1.G * total_mass/ Math.pow(b.distanceTo(SUN1), 1));
+            b.setVelocity(v*b.getVx(), v*b.getVy());
+            i+=1;
+        }
+        
+        Simulation sim = new Simulation(bodies, 1.0,Double.POSITIVE_INFINITY,60);
+        // sim.fps = 10;
+        sim.interParticleCollisions = true;
+        sim.sortBodiesByMorton = sortBodiesByMorton;
+        sim.parallel = parallel;
+        sim.graviationalForceField = true;
+        
+        // sim.setAlgorithm("Brute Force"); //2FPS at 5k particles. 40-50 FPS at 5k particles with Barnes-Hut
+        sim.reCenter = true;
+        // sim.updatePhysics();
+        // sim.testConcurrency();
+        // sim.testMorton();
+
+        sim.simulate();
+    }    
+}
+
+class StickyBody extends Body{
+    
+    public StickyBody(double x, double y, double vx, double vy, double mass, Color color) {
+        super(x, y, vx, vy, mass, color);
+    }
+
+    public int scaledRadius(){
+        double _radius = Math.pow(mass, 1.0/3.0);
+        if(this.overRiddenRadius == null){
+            return (int) Math.min(Math.max(1.0, _radius/1000.0),25.0);
+        }else{
+            return this.overRiddenRadius.intValue();
+        }
+    }    
+    
+    public void collide(Body other){
+        privateCollide(this,other);
+        // this.collided = this.mass>other.mass?false:true;
+    }
+
+    public static void privateCollide(Body b1, Body b2){
+        // large body absorbs the small body.
+        Body largeBody = b1.mass > b2.mass ? b1 : b2;
+        Body smallBody = b1.mass > b2.mass ? b2 : b1;
+
+        largeBody.vx = (largeBody.vx * largeBody.mass + smallBody.vx * smallBody.mass) / (largeBody.mass + smallBody.mass);
+        largeBody.vy = (largeBody.vy * largeBody.mass + smallBody.vy * smallBody.mass) / (largeBody.mass + smallBody.mass);
+        
+        smallBody.vx = 0;
+        smallBody.vy = 0;
+        
+        largeBody.mass += smallBody.mass-EPSILON;
+        smallBody.mass = EPSILON;
+
+        smallBody.collided = true;
+
+
+    }
+
+    public void draw(Graphics g){
+        if (this.collided){return;}
+        int posX = (int) Math.round(this.rx);
+        int posY = (int) Math.round(this.ry);
+        Color _color = (this.changeColorOnCollision && this.collided) ? this.SwitchColor : this.color;
+
+        g.setColor(_color);
+        g.fillOval(posX - this.scaledRadius(), posY - this.scaledRadius(), 2 * this.scaledRadius(), 2 * this.scaledRadius());
+        // this.collided = false;
+
+    }    
+   
 }
