@@ -12,12 +12,12 @@ import java.awt.Graphics;
 
 public class test {
     public static void main(String[] args) {
-        System.out.println("Hello, World!");
-        // galaxyCollision(false,false);
-        galaxy(true,true);
+        // System.out.println("Hello, World!");
+        // galaxyCollision(false,true);
+        // galaxy(false,true);
         // galaxyCollision(true,true);
         // ballThroughDust(true);
-        // windStream();
+        windStream();
         // dropTest();
         // fluid();  
     }
@@ -114,7 +114,7 @@ public class test {
         // bodies.add(Ball3);
         // Ball3.elastic = 0.0;
 
-        int numBodies = 50000;
+        int numBodies = 10000;
         double mass =1.0/numBodies;
         int overRiddenRadius = 1;
         double x = 0;
@@ -138,7 +138,7 @@ public class test {
             }     
         }
 
-        Simulation sim = new Simulation(bodies, .1, Double.POSITIVE_INFINITY);
+        Simulation sim = new Simulation(bodies, .1, Double.POSITIVE_INFINITY,1000);
         // sim.setAlgorithm("Brute Force"); 1FPS at 5k particles. 40-50 FPS at 5k particles with Barnes-Hut
         sim.interParticleCollisions = true;
         sim.graviationalForceField = false;
@@ -146,6 +146,7 @@ public class test {
         sim.drawTree = false;
         sim.wallCollisions = false;
         sim.parallel = true;
+        // sim.drawTree = true;
         // sim.setLocalGravity(0.01);
         sim.simulate();
 
@@ -156,12 +157,12 @@ public class test {
         List<Body> bodies = new ArrayList<>();
         // int width = 75;
 
-        Body BowlingBall = new Body(410,0,2,10,1,Color.RED);
-        BowlingBall.overRiddenRadius = 10;
-        bodies.add(BowlingBall);        
-        BowlingBall.elastic = 0.95;
+        // Body BowlingBall = new Body(410,0,2,10,1,Color.RED);
+        // BowlingBall.overRiddenRadius = 10;
+        // bodies.add(BowlingBall);        
+        // BowlingBall.elastic = 0.95;
 
-        int numBodies = 100000;
+        int numBodies = 10000;
         double mass =1.0/numBodies;
         int overRiddenRadius = 1;
 
@@ -170,8 +171,8 @@ public class test {
         double y = 250;
         for(int i = 0; i < Math.sqrt(numBodies)+1; i++){
             for(int j = 0;j<Math.sqrt(numBodies)+1;j++){
-                x = (j>0)?x+overRiddenRadius*2:NE; // increment as j increases. reset to 400 when j = 0
-                y = (j==0)?y+overRiddenRadius*2:y; //increment as i increases. No need to reset 
+                x = (j>0)?x+overRiddenRadius*2+0.01:NE; // increment as j increases. reset to 400 when j = 0
+                y = (j==0)?y+overRiddenRadius*2+0.01:y; //increment as i increases. No need to reset 
                 double vx = 0;
                 double vy = 0;            
                 Color color = Color.WHITE;
@@ -184,12 +185,12 @@ public class test {
             }
         }
 
-        Simulation sim = new Simulation(bodies, 1,Double.POSITIVE_INFINITY);
+        Simulation sim = new Simulation(bodies, 1.0,Double.POSITIVE_INFINITY,60);
         sim.interParticleCollisions = true;
         // sim.graviationalForceField = true;
         sim.wallCollisions = true;
         sim.parallel = parallel;
-        // sim.sortBodiesByMorton = true;
+        sim.sortBodiesByMorton = true;
         // sim.setLocalGravity(0.01);
         sim.simulate();
     }
@@ -276,17 +277,17 @@ public class test {
 
         List<Body> bodies = new ArrayList<>();
         double sunSpeed = 0;
-        StickyBody SUN1 = new StickyBody(400, 400, sunSpeed, sunSpeed, Math.pow(10, 15), new Color(255,0,0));
+        StickyBody SUN1 = new StickyBody(400, 400, sunSpeed, sunSpeed, Math.pow(10, 13), new Color(255,0,0));
         bodies.add(SUN1);
         
         double widthFactor = Math.min(Simulation.WIDTH / 2.0, Simulation.HEIGHT / 2.0);
         // double[] rings = {widthFactor * 0.125, widthFactor * 0.25, widthFactor * 0.5, widthFactor * 0.625, widthFactor * 0.75, widthFactor * 0.875};
-        double[] rings = {widthFactor * 0.125, widthFactor * 0.25, widthFactor * 0.5, widthFactor * 0.625, widthFactor * 0.75, widthFactor * 0.875};
+        double[] rings = {widthFactor * 0.125, widthFactor * 0.25, widthFactor * 0.5, widthFactor * 0.625, widthFactor * 0.75};
         
-        int nSatellites = 100_000;
+        int nSatellites = 10_00;
         int nrings = rings.length;
         Random rand = new Random();
-        rand.setSeed(0);
+        // rand.setSeed(0);
         double[] randomDistribution = new double[nSatellites];
         for (int i = 0; i < nSatellites; i++) {
             randomDistribution[i] = rand.nextGaussian();
@@ -295,7 +296,7 @@ public class test {
         
         for (int i = 0; i < nSatellites; i++) {
             double theta = 2 * Math.PI * rand.nextDouble();
-            double radius = rings[i % nrings] + 15*randomDistribution[i];
+            double radius = rings[i % nrings]*(1+randomDistribution[i]/6);
             double x = radius * Math.cos(theta)+SUN1.getX();
             double y = radius * Math.sin(theta)+SUN1.getY();
             
@@ -303,11 +304,33 @@ public class test {
             double vx =  -Math.sin(theta)+sunSpeed;
             double vy =  Math.cos(theta)+sunSpeed;
             
-            StickyBody b = new StickyBody(x, y, vx, vy, rand.nextGaussian(10E4,10E1)+(rand.nextDouble()<0.001?10E10:0), Color.WHITE);
+            double mass = 1.0+rand.nextGaussian()*0.0001+(rand.nextDouble()<0.000001?10E10:0);
+            StickyBody b = new StickyBody(x, y, vx, vy, mass, Color.WHITE);
+            // StickyBody b = new StickyBody(x, y, vx, vy, 5.0+rand.nextGaussian()+(rand.nextDouble()<0.01?10E10:0), Color.WHITE);
             b.changeColorOnCollision = true;
             b.SwitchColor = Color.YELLOW;
             bodies.add(b);
         }
+
+        // for (int i = 0; i < nSatellites/10; i++) {
+        //     double theta = 2 * Math.PI * rand.nextDouble();
+        //     double radius = rings[i % nrings]*(1+randomDistribution[i]/6);
+        //     // double radius = rings[i % nrings] + 15*randomDistribution[i];
+        //     double x = radius * Math.cos(theta)+SUN1.getX();
+        //     double y = radius * Math.sin(theta)+SUN1.getY();
+            
+        //     // double v = Math.sqrt(SUN1.G * SUN1.getMass() / Math.pow(radius, 1));
+        //     double vx =  -Math.sin(theta)+sunSpeed;
+        //     double vy =  Math.cos(theta)+sunSpeed;
+            
+        //     // Body b = new Body(x, y, vx, vy, 5.0+rand.nextGaussian()+(rand.nextDouble()<0.01?10E10:0), Color.WHITE);
+        //     double mass = 1.0+rand.nextGaussian()*0.0001+(rand.nextDouble()<0.000001?10E10:0);
+        //     Body b = new Body(x, y, vx, vy, mass, Color.WHITE);
+        //     b.changeColorOnCollision = true;
+        //     b.SwitchColor = Color.YELLOW;
+        //     bodies.add(b);
+        // }
+    
 
         double total_mass = 0.0;
         for (Body b : bodies) {
@@ -319,12 +342,26 @@ public class test {
                 i+=1;
                 continue;
             }
-            double v = (double) Math.sqrt(SUN1.G * total_mass/ Math.pow(b.distanceTo(SUN1), 1));
+            double v = (double) Math.sqrt(SUN1.G * total_mass/ Math.pow(b.distanceTo(SUN1), 1))*0.9;
             b.setVelocity(v*b.getVx(), v*b.getVy());
             i+=1;
         }
         
-        Simulation sim = new Simulation(bodies, 1.0,Double.POSITIVE_INFINITY,60);
+        Simulation sim = new Simulation(bodies, 1.0,Double.POSITIVE_INFINITY,30);
+
+        StickyBody Planet = new StickyBody(600, 400, 0, 0, 10E6, new Color(0,255,0));
+        double v = (double) Math.sqrt(SUN1.G * total_mass/ Math.pow(Planet.distanceTo(SUN1), 1)); 
+        Planet.setVelocity(0,-v);
+        Planet.overRiddenRadius = 10;
+
+        StickyBody Moon = new StickyBody(620, 400, 0, 0, 10E4, new Color(0,0,255));
+        v = (double) Math.sqrt(SUN1.G * total_mass/ Math.pow(Moon.distanceTo(SUN1), 1));
+        double v2 = (double) Math.sqrt(Planet.G * Planet.getMass()/ Math.pow(Moon.distanceTo(Planet), 1));
+        Moon.setVelocity(0,-v-v2);
+        Moon.overRiddenRadius = 5;
+
+        bodies.add(Planet);
+        bodies.add(Moon);
         // sim.fps = 10;
         sim.interParticleCollisions = true;
         sim.sortBodiesByMorton = sortBodiesByMorton;
@@ -357,6 +394,10 @@ class StickyBody extends Body{
     }    
     
     public void collide(Body other){
+        if(! (other instanceof StickyBody)){
+            super.privateCollide(this,other);
+            return;
+        }
         privateCollide(this,other);
         // this.collided = this.mass>other.mass?false:true;
     }

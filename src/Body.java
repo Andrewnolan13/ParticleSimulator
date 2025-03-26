@@ -119,7 +119,7 @@ public class Body{
         this.collided = true;
     }
 
-    public static void privateCollide(Body b1, Body b2){
+    protected static void privateCollide(Body b1, Body b2){
         double m1 = b1.mass;
         double m2 = b2.mass;
         double r1 = b1.scaledRadius();

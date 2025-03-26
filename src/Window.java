@@ -22,7 +22,7 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
     double currentTime;
     double fps;
     public boolean drawTree = false;
-    private int numIters = 0;
+    // private int numIters = 0;
 
     // need for drawing arrows for adding particles through GUI
     private Point startPoint = null;
@@ -33,6 +33,7 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
         this.timer = new Timer(utils.framesPerSecondToMillisecondsPerFrame(fps), this); // Roughly 60 FPS
         this.bodies = bodies;
         this.lastTime = System.currentTimeMillis();
+        addMouseListener(this);
     }
 
     protected abstract void updatePhysics();
@@ -54,7 +55,7 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
         // if(this.numIters % 2 == 0){ // only repaint every 2 iters. Why? because it's slow to repaint. It essentially doubles the forward pass speed to skip a frame. So you essentially achive the same FPS anyway.
         this.repaint();
         // }
-        this.numIters++;
+        // this.numIters++;
         
     }
     @Override
@@ -82,11 +83,10 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
         // Draw arrow if active
         // Draw the slingshot arrow if we're currently dragging
         if (drawingArrow && startPoint != null) {
-            System.out.println("Drawing arrow");
             Point current = getMousePosition(); // current mouse pos relative to this panel
             if (current != null) {
                 Graphics2D g2 = (Graphics2D) g;
-                drawArrow(g2, startPoint.x, startPoint.y, current.x, current.y);
+                drawArrow(g2, current.x, current.y ,startPoint.x, startPoint.y);
             }
         }      
     }
@@ -109,7 +109,6 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
     // MouseListener methods
     @Override
     public void mousePressed(MouseEvent e) {
-        System.out.println("Mouse pressed");
         startPoint = e.getPoint();
         drawingArrow = true;
         repaint();
@@ -121,6 +120,15 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
         drawingArrow = false;
         repaint();
         // add mew body here?
+        double x,y,vx,vy;
+        x = startPoint.x;
+        y = startPoint.y;
+        vx = (double)(-e.getX()+startPoint.x)/10;
+        vy = (double)(-e.getY()+startPoint.y)/10;
+        Body b = new Body(x,y,vx,vy,5.0,Color.WHITE);
+        b.overRiddenRadius = 5;
+        // b.elastic = 0.5;
+        this.bodies.add(b);
     }
     
     @Override public void mouseClicked(MouseEvent e) { }
