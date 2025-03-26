@@ -34,9 +34,6 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
     private Point startPoint = null;
     private boolean drawingArrow = false;    
 
-    // localization
-    // private static final ResourceBundle messages = ;
-
     public Window(List<Body> bodies, double fps) {
         this.timer = new Timer(utils.framesPerSecondToMillisecondsPerFrame(fps), this); // Roughly 60 FPS
         this.bodies = bodies;
@@ -136,7 +133,7 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
         // endPoint = e.getPoint();
         drawingArrow = false;
         repaint();
-        // add mew body here?
+        // add mew body here
         double x,y,vx,vy;
         x = startPoint.x;
         y = startPoint.y;

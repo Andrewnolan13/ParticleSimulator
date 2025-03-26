@@ -138,6 +138,7 @@ public class Templates {
         sim.drawTree = false;
         sim.wallCollisions = false;
         sim.parallel = true;
+        sim.oneLoop = true;
         // sim.drawTree = true;
         // sim.setLocalGravity(0.01);
         sim.simulate();
@@ -148,8 +149,8 @@ public class Templates {
 
         List<Body> bodies = new ArrayList<>();
 
-        int numBodies = 5000;
-        double mass =1.0/numBodies;
+        int numBodies = 20000;
+        double mass =0.05;
         int overRiddenRadius = 1;
 
         double NE = 450-Math.sqrt(numBodies)*overRiddenRadius;
@@ -164,16 +165,17 @@ public class Templates {
                 Color color = Color.WHITE;
                 Body b = new Body(x, y, vx, vy, mass, color);
                 b.overRiddenRadius = overRiddenRadius;
-                b.changeColorOnCollision = true;
-                b.SwitchColor = new Color(255,255,255,125);
+                // b.changeColorOnCollision = true;
+                // b.SwitchColor = new Color(255,255,255,125);
                 b.elastic = 0.0;
                 bodies.add(b);       
             }
         }
 
-        Simulation sim = new Simulation(bodies, 0.10,Double.POSITIVE_INFINITY,60);
+        Simulation sim = new Simulation(bodies, 0.50,Double.POSITIVE_INFINITY,60);
         sim.interParticleCollisions = true;
-        // sim.graviationalForceField = true;
+        sim.graviationalForceField = false;
+        sim.oneLoop = true;
         sim.wallCollisions = true;
         sim.parallel = parallel;
         sim.sortBodiesByMorton = true;
@@ -285,8 +287,8 @@ public class Templates {
             double mass = 1.0+rand.nextGaussian()*0.0001+(rand.nextDouble()<0.000001?10E10:0);
             StickyBody b = new StickyBody(x, y, vx, vy, mass, Color.WHITE);
             // StickyBody b = new StickyBody(x, y, vx, vy, 5.0+rand.nextGaussian()+(rand.nextDouble()<0.01?10E10:0), Color.WHITE);
-            b.changeColorOnCollision = true;
-            b.SwitchColor = Color.YELLOW;
+            // b.changeColorOnCollision = true;
+            // b.SwitchColor = Color.YELLOW;
             bodies.add(b);
         }
 
@@ -304,8 +306,8 @@ public class Templates {
             // Body b = new Body(x, y, vx, vy, 5.0+rand.nextGaussian()+(rand.nextDouble()<0.01?10E10:0), Color.WHITE);
             double mass = 1.0+rand.nextGaussian()*0.0001+(rand.nextDouble()<0.000001?10E10:0);
             Body b = new Body(x, y, vx, vy, mass, Color.WHITE);
-            b.changeColorOnCollision = true;
-            b.SwitchColor = Color.YELLOW;
+            // b.changeColorOnCollision = true;
+            // b.SwitchColor = Color.YELLOW;
             bodies.add(b);
         }
     
@@ -345,8 +347,9 @@ public class Templates {
         sim.sortBodiesByMorton = sortBodiesByMorton;
         sim.parallel = parallel;
         sim.graviationalForceField = true;
-        sim.reCenter = true;
+        sim.reCenter = false;
         sim.collisionThreshold = 50;
+        sim.oneLoop = true;
         sim.simulate();
     }    
 }

@@ -1,7 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
 import java.util.Locale;
-import java.util.function.Function;
 
 public class GUI {
     public static void main(String[] args) {
@@ -22,7 +21,7 @@ public class GUI {
         panel.add(galaxyCollision);
 
         JButton galaxy = new JButton("galaxy");
-        galaxy.addActionListener(_ -> Templates.galaxy(true,true));
+        galaxy.addActionListener(_ -> Templates.galaxy(false,true));
         panel.add(galaxy);
 
         JButton ballThroughDust = new JButton("ballThroughDust");

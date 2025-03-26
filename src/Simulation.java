@@ -18,6 +18,7 @@ public class Simulation extends Window{
     public boolean wallCollisions = false;
     public boolean sortBodiesByMorton = false;
     public boolean parallel = true;
+    public boolean oneLoop = false;
 
     private Double localGravity = null;
     private String algorithm = "Barnes-Hut";
@@ -54,6 +55,11 @@ public class Simulation extends Window{
             if(body.inQuad(quad)) {
                 this.tree.insert(body);}}
 
+        if(this.oneLoop){
+            // updates in oneLoop. Is quicker but less accurate.
+            this.updateOneLoop();
+            return;
+        }
         // update the gravitational force field
         if(this.graviationalForceField){
             this.updateGravitationalForceField();}
@@ -262,6 +268,49 @@ public class Simulation extends Window{
         this.sortBodiesByMorton = tmp;
     }
 
+    public void updateOneLoop(){
+        // gravity
+        // collsions
+        // wall collisions
+
+        (this.parallel?this.bodies.parallelStream():this.bodies.stream()).forEach(body -> {
+            // gravity
+            if(this.graviationalForceField){
+                this.tree.updateForce(body);}
+            // collisions
+            if(this.interParticleCollisions){
+                this.tree.updateCollisions(body, this.collisionThreshold);}
+            // wall collisions
+            if(this.wallCollisions){
+                double x = body.getX();
+                double y = body.getY();
+                double vx = body.getVx();
+                double vy = body.getVy();
+                double r = body.scaledRadius();
+                double correctDirection = 0;
+                int width = this.getWidth();
+                int height = this.getHeight();
+                if(x - r < 0 || x + r > width){
+                    correctDirection = x - r< 0 ? 1 : -1; 
+                    vx = correctDirection*Math.abs(vx)*body.elastic;
+                    x = x - r < 0 ? r+1 : width-r-1;
+                }if(y - r < 0 || y + r > height){
+                    correctDirection = y - r < 0 ? 1 : -1;
+                    vy = correctDirection*Math.abs(vy)*body.elastic;
+                    y = y - r < 0 ? r+1 : height-r-1;
+                }
+                body.setPosition(x, y);
+                body.setVelocity(vx, vy);                
+            }
+
+            // 
+            body.update(this.dt);
+            body.resetForce();
+
+        });
+    }
+
 }
+
 
 
