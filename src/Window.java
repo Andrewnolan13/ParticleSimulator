@@ -41,7 +41,7 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
     public void simulate() {
         JFrame frame = new JFrame("N-Body Simulation");
         frame.setSize(WIDTH, HEIGHT);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.add(this);
         frame.setVisible(true);
         timer.start();

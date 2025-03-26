@@ -1,12 +1,4 @@
-// public class test {
-//     public static void main(String[] args) {
-//         System.out.println("Hello, World!");
-//     }
-// }
-
 import java.util.*;
-
-
 import java.awt.Color;
 import java.awt.Graphics;
 
@@ -25,7 +17,6 @@ public class test {
         List<Body> bodies = new ArrayList<>();
 
         int numBodies = 5000;
-        // double mass =1.0/numBodies;
         int overRiddenRadius = 4;
 
         double NE = 450-Math.sqrt(numBodies)*overRiddenRadius;
@@ -211,7 +202,7 @@ public class test {
         // double[] rings = {widthFactor * 0.125, widthFactor * 0.25, widthFactor * 0.5, widthFactor * 0.625, widthFactor * 0.75, widthFactor * 0.875};
         double[] rings = {widthFactor * 0.33, widthFactor * 0.40, widthFactor * 0.50};
         
-        int nSatellites = 25_000;
+        int nSatellites = 25_00;
         int nrings = rings.length;
         Random rand = new Random();
         rand.setSeed(0);
@@ -258,17 +249,9 @@ public class test {
         
         Simulation sim = new Simulation(bodies, 0.5);
         sim.fps = 6000000000.0;
-        // sim.interParticleCollisions = true;
         sim.sortBodiesByMorton = sortBodiesByMorton;
         sim.parallel = parallel;
         sim.graviationalForceField = true;
-        
-        // sim.setAlgorithm("Brute Force"); //2FPS at 5k particles. 40-50 FPS at 5k particles with Barnes-Hut
-        // sim.reCenter = true;
-        sim.updatePhysics();
-        sim.testConcurrency();
-        sim.testMorton();
-
         sim.simulate();
     }
 
