@@ -2,14 +2,14 @@ import java.util.*;
 import java.awt.Color;
 import java.awt.Graphics;
 
-public class test {
+public class Templates {
     public static void main(String[] args) {
         // System.out.println("Hello, World!");
         // galaxyCollision(false,true);
         // galaxy(false,true);
         // galaxyCollision(true,true);
-        // ballThroughDust(true);
-        windStream();
+        ballThroughDust(false);
+        // windStream();
         // dropTest();
         // fluid();  
     }
@@ -35,12 +35,12 @@ public class test {
                 b.overRiddenRadius = overRiddenRadius;
                 // b.changeColorOnCollision = true;
                 // b.SwitchColor = new Color(255,255,255,125);
-                b.elastic = 0.9;
+                b.elastic =0.0;
                 bodies.add(b);       
             }
         }
 
-        Simulation sim = new Simulation(bodies, 0.01,Double.POSITIVE_INFINITY);
+        Simulation sim = new Simulation(bodies, 0.1,Double.POSITIVE_INFINITY);
         sim.collisionThreshold = 50;
         sim.interParticleCollisions = true;
         sim.graviationalForceField = false;
@@ -67,6 +67,7 @@ public class test {
         sim.wallCollisions = true;
         sim.graviationalForceField = false;
         sim.interParticleCollisions = false;
+        sim.parallel = false;
         sim.simulate();
 
     } 
@@ -146,14 +147,8 @@ public class test {
         // Ball flying through 50k particles. Good one to watch tbh.
 
         List<Body> bodies = new ArrayList<>();
-        // int width = 75;
 
-        // Body BowlingBall = new Body(410,0,2,10,1,Color.RED);
-        // BowlingBall.overRiddenRadius = 10;
-        // bodies.add(BowlingBall);        
-        // BowlingBall.elastic = 0.95;
-
-        int numBodies = 10000;
+        int numBodies = 5000;
         double mass =1.0/numBodies;
         int overRiddenRadius = 1;
 
@@ -176,7 +171,7 @@ public class test {
             }
         }
 
-        Simulation sim = new Simulation(bodies, 1.0,Double.POSITIVE_INFINITY,60);
+        Simulation sim = new Simulation(bodies, 0.10,Double.POSITIVE_INFINITY,60);
         sim.interParticleCollisions = true;
         // sim.graviationalForceField = true;
         sim.wallCollisions = true;
@@ -267,7 +262,7 @@ public class test {
         // double[] rings = {widthFactor * 0.125, widthFactor * 0.25, widthFactor * 0.5, widthFactor * 0.625, widthFactor * 0.75, widthFactor * 0.875};
         double[] rings = {widthFactor * 0.125, widthFactor * 0.25, widthFactor * 0.5, widthFactor * 0.625, widthFactor * 0.75};
         
-        int nSatellites = 10_00;
+        int nSatellites = 5_000;
         int nrings = rings.length;
         Random rand = new Random();
         // rand.setSeed(0);
@@ -295,24 +290,24 @@ public class test {
             bodies.add(b);
         }
 
-        // for (int i = 0; i < nSatellites/10; i++) {
-        //     double theta = 2 * Math.PI * rand.nextDouble();
-        //     double radius = rings[i % nrings]*(1+randomDistribution[i]/6);
-        //     // double radius = rings[i % nrings] + 15*randomDistribution[i];
-        //     double x = radius * Math.cos(theta)+SUN1.getX();
-        //     double y = radius * Math.sin(theta)+SUN1.getY();
+        for (int i = 0; i < nSatellites/10; i++) {
+            double theta = 2 * Math.PI * rand.nextDouble();
+            double radius = rings[i % nrings]*(1+randomDistribution[i]/6);
+            // double radius = rings[i % nrings] + 15*randomDistribution[i];
+            double x = radius * Math.cos(theta)+SUN1.getX();
+            double y = radius * Math.sin(theta)+SUN1.getY();
             
-        //     // double v = Math.sqrt(SUN1.G * SUN1.getMass() / Math.pow(radius, 1));
-        //     double vx =  -Math.sin(theta)+sunSpeed;
-        //     double vy =  Math.cos(theta)+sunSpeed;
+            // double v = Math.sqrt(SUN1.G * SUN1.getMass() / Math.pow(radius, 1));
+            double vx =  -Math.sin(theta)+sunSpeed;
+            double vy =  Math.cos(theta)+sunSpeed;
             
-        //     // Body b = new Body(x, y, vx, vy, 5.0+rand.nextGaussian()+(rand.nextDouble()<0.01?10E10:0), Color.WHITE);
-        //     double mass = 1.0+rand.nextGaussian()*0.0001+(rand.nextDouble()<0.000001?10E10:0);
-        //     Body b = new Body(x, y, vx, vy, mass, Color.WHITE);
-        //     b.changeColorOnCollision = true;
-        //     b.SwitchColor = Color.YELLOW;
-        //     bodies.add(b);
-        // }
+            // Body b = new Body(x, y, vx, vy, 5.0+rand.nextGaussian()+(rand.nextDouble()<0.01?10E10:0), Color.WHITE);
+            double mass = 1.0+rand.nextGaussian()*0.0001+(rand.nextDouble()<0.000001?10E10:0);
+            Body b = new Body(x, y, vx, vy, mass, Color.WHITE);
+            b.changeColorOnCollision = true;
+            b.SwitchColor = Color.YELLOW;
+            bodies.add(b);
+        }
     
 
         double total_mass = 0.0;
@@ -350,18 +345,13 @@ public class test {
         sim.sortBodiesByMorton = sortBodiesByMorton;
         sim.parallel = parallel;
         sim.graviationalForceField = true;
-        
-        // sim.setAlgorithm("Brute Force"); //2FPS at 5k particles. 40-50 FPS at 5k particles with Barnes-Hut
         sim.reCenter = true;
-        // sim.updatePhysics();
-        // sim.testConcurrency();
-        // sim.testMorton();
-
+        sim.collisionThreshold = 50;
         sim.simulate();
     }    
 }
 
-class StickyBody extends Body{
+final class StickyBody extends Body{
     
     public StickyBody(double x, double y, double vx, double vy, double mass, Color color) {
         super(x, y, vx, vy, mass, color);
@@ -377,12 +367,17 @@ class StickyBody extends Body{
     }    
     
     public void collide(Body other){
-        if(! (other instanceof StickyBody)){
-            super.privateCollide(this,other);
-            return;
+        // if(! (other instanceof StickyBody)){
+        //     super.privateCollide(this,other);
+        //     return;
+        // }
+        // privateCollide(this,other);
+        //same logic as above but with pattern matching switch
+        switch (other) {   
+            case StickyBody sb -> privateCollide(this, sb); 
+            default -> super.privateCollide(this, other);
         }
-        privateCollide(this,other);
-        // this.collided = this.mass>other.mass?false:true;
+    
     }
 
     public static void privateCollide(Body b1, Body b2){

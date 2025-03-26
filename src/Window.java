@@ -9,12 +9,15 @@
  import java.awt.event.*;
  import java.util.List;
  import javax.swing.*;
+ import java.time.LocalDateTime;
+ import java.time.format.DateTimeFormatter;
 
 public abstract class Window extends JPanel implements ActionListener, MouseListener  {
     public static final int WIDTH = 800;
     public static final int HEIGHT = 800;
     private Timer timer;
     public List<Body> bodies;
+    public boolean running = true;
     
     // need for drawing tree and making text
     Tree tree;
@@ -22,11 +25,9 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
     double currentTime;
     double fps;
     public boolean drawTree = false;
-    // private int numIters = 0;
 
     // need for drawing arrows for adding particles through GUI
     private Point startPoint = null;
-    // private Point endPoint = null;
     private boolean drawingArrow = false;    
 
     public Window(List<Body> bodies, double fps) {
@@ -41,22 +42,31 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
     public void simulate() {
         JFrame frame = new JFrame("N-Body Simulation");
         frame.setSize(WIDTH, HEIGHT);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        // frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); changing this in favour of stopping the simulation when the window is closed
+        frame.addWindowListener(
+            new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    running = false;
+                    frame.dispose();
+                    timer.stop();
+                }
+            }
+        );
         frame.add(this);
         frame.setVisible(true);
         timer.start();
     }
     @Override
     public void actionPerformed(ActionEvent e) {
+        if (!running) {
+            return;
+        }
         long _currentTime = System.currentTimeMillis();
         this.fps = 1000.0 / (_currentTime - this.lastTime);
         this.lastTime = _currentTime;
         this.updatePhysics();
-        // if(this.numIters % 2 == 0){ // only repaint every 2 iters. Why? because it's slow to repaint. It essentially doubles the forward pass speed to skip a frame. So you essentially achive the same FPS anyway.
         this.repaint();
-        // }
-        // this.numIters++;
-        
     }
     @Override
     protected void paintComponent(Graphics g) {
@@ -71,6 +81,7 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
         g.setColor(Color.WHITE);
         g.drawString("FPS: " + (int)this.fps, 10, 20);
         g.drawString("Number of bodies: " + (int)(this.tree!=null?this.tree.numBodies:this.bodies.size()), 10, 40);
+        g.drawString("DateTime: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), 10, 60);
         
         // Draw the tree
         if (this.drawTree&&this.tree != null) {

@@ -27,7 +27,8 @@ public class Simulation extends Window{
         this.dt = dt;
         this.Theta = Theta;
         System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "8");
-
+        // show statistics
+        Statistics.print(this);
     }
 
     public Simulation(List<Body> bodies, double dt, Double Theta) {
@@ -37,6 +38,7 @@ public class Simulation extends Window{
         this(bodies, dt, Double.POSITIVE_INFINITY);}
 
     protected void updatePhysics() {
+
         // build the tree
         int radius =(int) Math.max(this.getWidth(), this.getHeight());
         Quad quad = new Quad(this.getWidth()/2, this.getHeight()/2, radius); //TO DO: extend to rectangular window
@@ -82,10 +84,12 @@ public class Simulation extends Window{
                             .forEach(body -> this.tree.updateForce(body));
                 return;
             }
-            for(Body body : this.bodies){
-                this.tree.updateForce(body);
+            else{
+                for(Body body : this.bodies){
+                    this.tree.updateForce(body);
+                }
+                return;
             }
-            return;
         }
         else if(this.algorithm.equals("Brute Force")){
             for(int i = 0; i < this.bodies.size(); i++){
@@ -101,9 +105,13 @@ public class Simulation extends Window{
                 this.bodies.parallelStream()
                             .forEach(body -> this.tree.updateCollisions(body, this.collisionThreshold));
                 return;
+            }else{
+                for(Body body : this.bodies){
+                    this.tree.updateCollisions(body, this.collisionThreshold);
+                }
+                return;
             }
-            for(Body body : this.bodies){
-                this.tree.updateCollisions(body, this.collisionThreshold);}return;}
+        }
         else if(this.algorithm.equals("Brute Force")){
             for(int i = 0; i < this.bodies.size(); i++){
                 for(int j = i+1; j < this.bodies.size(); j++){

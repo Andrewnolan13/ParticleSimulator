@@ -1,7 +1,7 @@
 import java.awt.Color;
 import java.awt.Graphics;
 
-public class Body{
+public sealed class Body permits StickyBody{
     public double G = 6.6743e-11;
     public double elastic = 1.0;
     public static double EPSILON = 10e-4;
