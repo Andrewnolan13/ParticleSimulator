@@ -1,7 +1,7 @@
+
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
 
 
 public class Simulation extends Window{
@@ -21,6 +21,7 @@ public class Simulation extends Window{
 
     private Double localGravity = null;
     private String algorithm = "Barnes-Hut";
+
 
     public Simulation(List<Body> bodies, double dt, Double Theta, double fps) {
         super(bodies,fps);

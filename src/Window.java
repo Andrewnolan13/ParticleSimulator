@@ -5,12 +5,16 @@
  * The simulation classs will now just inherit from here.
  */
 
- import java.awt.*;
- import java.awt.event.*;
- import java.util.List;
- import javax.swing.*;
- import java.time.LocalDateTime;
- import java.time.format.DateTimeFormatter;
+import java.awt.*;
+import java.awt.event.*;
+import java.text.MessageFormat;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.Locale;
+
+import javax.swing.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public abstract class Window extends JPanel implements ActionListener, MouseListener  {
     public static final int WIDTH = 800;
@@ -30,6 +34,9 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
     private Point startPoint = null;
     private boolean drawingArrow = false;    
 
+    // localization
+    // private static final ResourceBundle messages = ;
+
     public Window(List<Body> bodies, double fps) {
         this.timer = new Timer(utils.framesPerSecondToMillisecondsPerFrame(fps), this); // Roughly 60 FPS
         this.bodies = bodies;
@@ -40,7 +47,7 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
     protected abstract void updatePhysics();
 
     public void simulate() {
-        JFrame frame = new JFrame("N-Body Simulation");
+        JFrame frame = new JFrame(ResourceBundle.getBundle("resources.messages", Locale.getDefault()).getString("window.title"));
         frame.setSize(WIDTH, HEIGHT);
         // frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); changing this in favour of stopping the simulation when the window is closed
         frame.addWindowListener(
@@ -79,10 +86,9 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
     
         // Set text color to white
         g.setColor(Color.WHITE);
-        g.drawString("FPS: " + (int)this.fps, 10, 20);
-        g.drawString("Number of bodies: " + (int)(this.tree!=null?this.tree.numBodies:this.bodies.size()), 10, 40);
-        g.drawString("DateTime: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), 10, 60);
-        
+        g.drawString(MessageFormat.format(ResourceBundle.getBundle("resources.messages", Locale.getDefault()).getString("frame.rate"), (int)this.fps), 10, 20);
+        g.drawString(MessageFormat.format(ResourceBundle.getBundle("resources.messages", Locale.getDefault()).getString("total.bodies"), (int)(this.tree!=null?this.tree.numBodies:this.bodies.size())), 10, 40);
+        g.drawString(MessageFormat.format(ResourceBundle.getBundle("resources.messages", Locale.getDefault()).getString("date.time"), LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))), 10, 60);
         // Draw the tree
         if (this.drawTree&&this.tree != null) {
             this.tree.draw(g);

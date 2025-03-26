@@ -66,7 +66,7 @@ public class Templates {
         sim.setLocalGravity(0.6);
         sim.wallCollisions = true;
         sim.graviationalForceField = false;
-        sim.interParticleCollisions = false;
+        sim.interParticleCollisions = true;
         sim.parallel = false;
         sim.simulate();
 

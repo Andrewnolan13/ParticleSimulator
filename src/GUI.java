@@ -1,8 +1,11 @@
 import javax.swing.*;
 import java.awt.*;
+import java.util.Locale;
+import java.util.function.Function;
 
 public class GUI {
     public static void main(String[] args) {
+        Locale.setDefault(Locale.ENGLISH);
         SwingUtilities.invokeLater(GUI::createAndShowGUI);
     }
 
@@ -37,6 +40,10 @@ public class GUI {
         JButton fluid = new JButton("fluid");
         fluid.addActionListener(_ -> Templates.fluid());
         panel.add(fluid);
+
+        JCheckBox portuguese = new JCheckBox("Portuguese");
+        portuguese.addActionListener(_ -> Locale.setDefault(portuguese.isSelected() ? new Locale("pt", "BR") : Locale.ENGLISH));
+        panel.add(portuguese);
 
         frame.add(panel);
         frame.setLocationRelativeTo(null);
