@@ -8,6 +8,7 @@ public class GUI {
         SwingUtilities.invokeLater(GUI::createAndShowGUI);
     }
 
+    @SuppressWarnings("deprecation")
     private static void createAndShowGUI() {
         JFrame frame = new JFrame("Simulation GUI");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

@@ -31,10 +31,10 @@ public class Templates {
             double y = (double) row.getValue("Y");
             double vx = (double) row.getValue("VX");
             double vy = (double) row.getValue("VY");
-            double mass = (double) row.getValue("Mass")*(idx == 0?1.0E20:1.0E15);
+            double mass = (double) row.getValue("Mass")*(idx == 0?1.0E32:1.0E24);
             int r = (int) row.getValue("Radius");
             Color color = new Color((int) row.getValue("R"),(int) row.getValue("G"),(int) row.getValue("B"));
-            Body b = new StickyBody(x, y, vx, vy, mass, color);
+            Body b = new Body(x, y, vx, vy, mass, color);
             b.overRiddenRadius = r;
             bodies.add(b);
             idx++;
@@ -73,19 +73,19 @@ public class Templates {
             double y = r * Math.sin(theta) + ycm;
             double vx = -Math.sin(theta) * Math.sqrt(bodies.get(0).G * totalMass / r);
             double vy = Math.cos(theta) * Math.sqrt(bodies.get(0).G * totalMass / r);
-            boolean switchDirection = Math.random() < 0.5;
+            boolean switchDirection = Math.random() < 0.95;
             if (switchDirection) {
                 vx = -vx;
                 vy = -vy;
             }
-            Body b = new StickyBody(x, y, vx, vy, 10.0E6, Color.WHITE);
+            Body b = new StickyBody(x, y, vx, vy, 10.0E8, Color.WHITE);
             // b.overRiddenRadius = 1;
             bodies.add(b);
         }
 
 
 
-        Simulation sim = new Simulation(bodies, 0.0000001,Double.POSITIVE_INFINITY);
+        Simulation sim = new Simulation(bodies, 0.0000000000001,Double.POSITIVE_INFINITY);
         sim.fps = 600.0;
         sim.oneLoop = false;
         sim.sortBodiesByMorton = false;
