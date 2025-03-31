@@ -2,6 +2,9 @@
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+// import java.util.concurrent.TimeUnit;
 
 
 public class Simulation extends Window{
@@ -23,6 +26,7 @@ public class Simulation extends Window{
     private Double localGravity = null;
     private String algorithm = "Barnes-Hut";
 
+    public ExecutorService executor = Executors.newFixedThreadPool(8);
 
     public Simulation(List<Body> bodies, double dt, Double Theta, double fps) {
         super(bodies,fps);
@@ -57,7 +61,12 @@ public class Simulation extends Window{
 
         if(this.oneLoop){
             // updates in oneLoop. Is quicker but less accurate.
-            this.updateOneLoop();
+            try {
+                this.updateOneLoop();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            // this.updateOneLoop();
             return;
         }
         // update the gravitational force field
@@ -268,46 +277,87 @@ public class Simulation extends Window{
         this.sortBodiesByMorton = tmp;
     }
 
-    public void updateOneLoop(){
+    public void updateOneLoop() throws InterruptedException{
         // gravity
         // collsions
         // wall collisions
 
-        (this.parallel?this.bodies.parallelStream():this.bodies.stream()).forEach(body -> {
-            // gravity
-            if(this.graviationalForceField){
-                this.tree.updateForce(body);}
-            // collisions
-            if(this.interParticleCollisions){
-                this.tree.updateCollisions(body, this.collisionThreshold);}
-            // wall collisions
-            if(this.wallCollisions){
-                double x = body.getX();
-                double y = body.getY();
-                double vx = body.getVx();
-                double vy = body.getVy();
-                double r = body.scaledRadius();
-                double correctDirection = 0;
-                int width = this.getWidth();
-                int height = this.getHeight();
-                if(x - r < 0 || x + r > width){
-                    correctDirection = x - r< 0 ? 1 : -1; 
-                    vx = correctDirection*Math.abs(vx)*body.elastic;
-                    x = x - r < 0 ? r+1 : width-r-1;
-                }if(y - r < 0 || y + r > height){
-                    correctDirection = y - r < 0 ? 1 : -1;
-                    vy = correctDirection*Math.abs(vy)*body.elastic;
-                    y = y - r < 0 ? r+1 : height-r-1;
+        // (this.parallel?this.bodies.parallelStream():this.bodies.stream()).forEach(body -> {
+        //     // gravity
+        //     if(this.graviationalForceField){
+        //         this.tree.updateForce(body);}
+        //     // collisions
+        //     if(this.interParticleCollisions){
+        //         this.tree.updateCollisions(body, this.collisionThreshold);}
+        //     // wall collisions
+        //     if(this.wallCollisions){
+        //         double x = body.getX();
+        //         double y = body.getY();
+        //         double vx = body.getVx();
+        //         double vy = body.getVy();
+        //         double r = body.scaledRadius();
+        //         double correctDirection = 0;
+        //         int width = this.getWidth();
+        //         int height = this.getHeight();
+        //         if(x - r < 0 || x + r > width){
+        //             correctDirection = x - r< 0 ? 1 : -1; 
+        //             vx = correctDirection*Math.abs(vx)*body.elastic;
+        //             x = x - r < 0 ? r+1 : width-r-1;
+        //         }if(y - r < 0 || y + r > height){
+        //             correctDirection = y - r < 0 ? 1 : -1;
+        //             vy = correctDirection*Math.abs(vy)*body.elastic;
+        //             y = y - r < 0 ? r+1 : height-r-1;
+        //         }
+        //         body.setPosition(x, y);
+        //         body.setVelocity(vx, vy);                
+        //     }
+
+        //     // 
+        //     body.update(this.dt);
+        //     body.resetForce();
+
+        // });
+        // System.out.println("updateOneLoop()");
+
+        for (Body body : this.bodies) {
+            executor.submit(() -> {
+                if (this.graviationalForceField){
+                    this.tree.updateForce(body);
                 }
-                body.setPosition(x, y);
-                body.setVelocity(vx, vy);                
-            }
-
-            // 
-            body.update(this.dt);
-            body.resetForce();
-
-        });
+                if (this.interParticleCollisions){
+                    this.tree.updateCollisions(body, this.collisionThreshold);
+                }
+                if (this.wallCollisions){
+                    double x = body.getX();
+                    double y = body.getY();
+                    double vx = body.getVx();
+                    double vy = body.getVy();
+                    double r = body.scaledRadius();
+                    double correctDirection = 0;
+                    int width = this.getWidth();
+                    int height = this.getHeight();
+                    if(x - r < 0 || x + r > width){
+                        correctDirection = x - r< 0 ? 1 : -1; 
+                        vx = correctDirection*Math.abs(vx)*body.elastic;
+                        x = x - r < 0 ? r+1 : width-r-1;
+                    }if(y - r < 0 || y + r > height){
+                        correctDirection = y - r < 0 ? 1 : -1;
+                        vy = correctDirection*Math.abs(vy)*body.elastic;
+                        y = y - r < 0 ? r+1 : height-r-1;
+                    }
+                    body.setPosition(x, y);
+                    body.setVelocity(vx, vy);     
+                    }
+                body.update(this.dt);
+                // body.update(Math.max((double) 5.0/this.fps, this.dt));
+                body.resetForce();
+            });
+        }
+        
+        // executor.shutdown();
+        // executor.awaitTermination(1, TimeUnit.MINUTES);
+        // executor.
+                 
     }
 
 }

@@ -27,7 +27,7 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
     Tree tree;
     double lastTime;
     double currentTime;
-    double fps;
+    public double fps;
     public boolean drawTree = false;
 
     // need for drawing arrows for adding particles through GUI

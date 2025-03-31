@@ -36,9 +36,9 @@ public class GUI {
         dropTest.addActionListener(_ -> Templates.dropTest());
         panel.add(dropTest);
 
-        JButton fluid = new JButton("fluid");
-        fluid.addActionListener(_ -> Templates.fluid());
-        panel.add(fluid);
+        JButton solarSystem = new JButton("Our Solar System");
+        solarSystem.addActionListener(_ -> Templates.solarSystem());
+        panel.add(solarSystem);
 
         JCheckBox portuguese = new JCheckBox("Portuguese");
         portuguese.addActionListener(_ -> Locale.setDefault(portuguese.isSelected() ? new Locale("pt", "BR") : Locale.ENGLISH));

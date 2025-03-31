@@ -1,6 +1,9 @@
 import java.util.*;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.nio.file.Path;
+
+import IO.*;
 
 public class Templates {
     public static void main(String[] args) {
@@ -8,10 +11,90 @@ public class Templates {
         // galaxyCollision(false,true);
         // galaxy(false,true);
         // galaxyCollision(true,true);
-        ballThroughDust(false);
+        ballThroughDust(true);
         // windStream();
         // dropTest();
         // fluid();  
+    }
+    public static void solarSystem(){
+        Path filePath = TextFileReader.sourceDirectory();
+        filePath = filePath.resolve("data/SolarSystem.txt");
+        TextFileReader reader = new TextFileReader();
+        reader.read(filePath);
+        
+        DataFrame df = new DataFrame(reader.lines.toArray(new String[0]),
+                                    new Class[] {Double.class, Double.class, Double.class, Double.class, Double.class,Integer.class, Integer.class, Integer.class, Integer.class});
+        List<Body> bodies = new ArrayList<>();
+        int idx = 0;
+        for (Row row:df){
+            double x = (double) row.getValue("X");
+            double y = (double) row.getValue("Y");
+            double vx = (double) row.getValue("VX");
+            double vy = (double) row.getValue("VY");
+            double mass = (double) row.getValue("Mass")*(idx == 0?1.0E20:1.0E15);
+            int r = (int) row.getValue("Radius");
+            Color color = new Color((int) row.getValue("R"),(int) row.getValue("G"),(int) row.getValue("B"));
+            Body b = new StickyBody(x, y, vx, vy, mass, color);
+            b.overRiddenRadius = r;
+            bodies.add(b);
+            idx++;
+        }
+
+        // calculate centre of mass
+        double totalMass = 0.0;
+        double xcm = 0.0;
+        double ycm = 0.0;
+        
+        for (Body b : bodies) {
+            totalMass += b.getMass();
+            xcm += b.getX() * b.getMass();
+            ycm += b.getY() * b.getMass();
+        }
+        xcm /= totalMass;
+        ycm /= totalMass;
+
+        // for each body in body, make it orbit the centre of mass at the orbit velocity
+        idx = 0;
+        for (Body b : bodies) {
+            if(idx == 0){
+                idx+=1;
+                continue;
+            }
+            double r = Math.sqrt((b.getX() - xcm) * (b.getX() - xcm) + (b.getY() - ycm) * (b.getY() - ycm));
+            double v = Math.sqrt(b.G * totalMass / r);
+            b.setVelocity(0, v);
+        }
+
+        // add in 1000 particles in a circle around the sun, orbiting the sun, each of mass 0.00000001
+        for (int i = 0; i < 10000; i++) {
+            double theta = 2 * Math.PI * i / 1000;
+            double r = 100 + Math.random() * 500;
+            double x = r * Math.cos(theta) + xcm;
+            double y = r * Math.sin(theta) + ycm;
+            double vx = -Math.sin(theta) * Math.sqrt(bodies.get(0).G * totalMass / r);
+            double vy = Math.cos(theta) * Math.sqrt(bodies.get(0).G * totalMass / r);
+            boolean switchDirection = Math.random() < 0.5;
+            if (switchDirection) {
+                vx = -vx;
+                vy = -vy;
+            }
+            Body b = new StickyBody(x, y, vx, vy, 10.0E6, Color.WHITE);
+            // b.overRiddenRadius = 1;
+            bodies.add(b);
+        }
+
+
+
+        Simulation sim = new Simulation(bodies, 0.0000001,Double.POSITIVE_INFINITY);
+        sim.fps = 600.0;
+        sim.oneLoop = false;
+        sim.sortBodiesByMorton = false;
+        sim.parallel = true;
+        sim.interParticleCollisions = true;
+        sim.graviationalForceField = true;
+        sim.reCenter = true;
+        sim.simulate();        
+
     }
     public static void fluid(){
         List<Body> bodies = new ArrayList<>();
@@ -149,7 +232,7 @@ public class Templates {
 
         List<Body> bodies = new ArrayList<>();
 
-        int numBodies = 20000;
+        int numBodies = 10000;
         double mass =0.05;
         int overRiddenRadius = 1;
 
@@ -165,20 +248,21 @@ public class Templates {
                 Color color = Color.WHITE;
                 Body b = new Body(x, y, vx, vy, mass, color);
                 b.overRiddenRadius = overRiddenRadius;
-                // b.changeColorOnCollision = true;
-                // b.SwitchColor = new Color(255,255,255,125);
+                b.changeColorOnCollision = true;
+                b.SwitchColor = new Color(255,255,255,125);
                 b.elastic = 0.0;
                 bodies.add(b);       
             }
         }
-
+        
+        System.out.println("Bodies: " + bodies.size());
         Simulation sim = new Simulation(bodies, 0.50,Double.POSITIVE_INFINITY,60);
         sim.interParticleCollisions = true;
         sim.graviationalForceField = false;
         sim.oneLoop = true;
         sim.wallCollisions = true;
         sim.parallel = parallel;
-        sim.sortBodiesByMorton = true;
+        sim.sortBodiesByMorton = false;
         // sim.setLocalGravity(0.01);
         sim.simulate();
     }
@@ -192,14 +276,14 @@ public class Templates {
 
         List<Body> bodies = new ArrayList<>();
         double sunSpeed = 0;
-        Body SUN1 = new Body(400, 200, sunSpeed, sunSpeed, Math.pow(10, 13), new Color(255,0,0));
+        StickyBody SUN1 = new StickyBody(400, 200, sunSpeed, sunSpeed, Math.pow(10, 13), new Color(255,0,0));
         bodies.add(SUN1);
         
         double widthFactor = Math.min(Simulation.WIDTH / 2.0, Simulation.HEIGHT / 2.0);
         // double[] rings = {widthFactor * 0.125, widthFactor * 0.25, widthFactor * 0.5, widthFactor * 0.625, widthFactor * 0.75, widthFactor * 0.875};
         double[] rings = {widthFactor * 0.33, widthFactor * 0.40, widthFactor * 0.50};
         
-        int nSatellites = 25_00;
+        int nSatellites = 5000;
         int nrings = rings.length;
         Random rand = new Random();
         rand.setSeed(0);
@@ -219,13 +303,13 @@ public class Templates {
             double vx = -v * Math.sin(theta)+sunSpeed;
             double vy = v * Math.cos(theta)+sunSpeed;
             
-            Body b = new Body(x, y, vx, vy, 1, Color.WHITE);
+            StickyBody b = new StickyBody(x, y, vx, vy, 1, Color.WHITE);
             b.changeColorOnCollision = true;
             b.SwitchColor = Color.YELLOW;
             bodies.add(b);
         }
 
-        Body SUN2 = new Body(400, Simulation.HEIGHT-250, -sunSpeed, -sunSpeed, Math.pow(10, 13), new Color(255,0,0));
+        StickyBody SUN2 = new StickyBody(400, Simulation.HEIGHT-250, -sunSpeed, -sunSpeed, Math.pow(10, 13), new Color(255,0,0));
         bodies.add(SUN2);
         
         for (int i = 0; i < nSatellites; i++) {
@@ -238,7 +322,7 @@ public class Templates {
             double vx = -v * Math.sin(theta)-sunSpeed;
             double vy = v * Math.cos(theta)-sunSpeed;
             
-            Body b = new Body(x, y, vx, vy, 1, Color.WHITE);
+            StickyBody b = new StickyBody(x, y, vx, vy, 1, Color.WHITE);
             b.changeColorOnCollision = true;
             b.SwitchColor = Color.YELLOW;
             bodies.add(b);
@@ -246,8 +330,10 @@ public class Templates {
         
         Simulation sim = new Simulation(bodies, 0.5);
         sim.fps = 6000000000.0;
+        sim.oneLoop = true;
         sim.sortBodiesByMorton = sortBodiesByMorton;
         sim.parallel = parallel;
+        // sim.interParticleCollisions = true;
         sim.graviationalForceField = true;
         sim.simulate();
     }
@@ -284,7 +370,7 @@ public class Templates {
             double vx =  -Math.sin(theta)+sunSpeed;
             double vy =  Math.cos(theta)+sunSpeed;
             
-            double mass = 1.0+rand.nextGaussian()*0.0001+(rand.nextDouble()<0.000001?10E10:0);
+            double mass = 0.01+rand.nextGaussian()*0.0001+(rand.nextDouble()<0.000001?10E10:0);
             StickyBody b = new StickyBody(x, y, vx, vy, mass, Color.WHITE);
             // StickyBody b = new StickyBody(x, y, vx, vy, 5.0+rand.nextGaussian()+(rand.nextDouble()<0.01?10E10:0), Color.WHITE);
             // b.changeColorOnCollision = true;
@@ -304,7 +390,7 @@ public class Templates {
             double vy =  Math.cos(theta)+sunSpeed;
             
             // Body b = new Body(x, y, vx, vy, 5.0+rand.nextGaussian()+(rand.nextDouble()<0.01?10E10:0), Color.WHITE);
-            double mass = 1.0+rand.nextGaussian()*0.0001+(rand.nextDouble()<0.000001?10E10:0);
+            double mass = 0.1+rand.nextGaussian()*0.0001+(rand.nextDouble()<0.000001?10E10:0);
             Body b = new Body(x, y, vx, vy, mass, Color.WHITE);
             // b.changeColorOnCollision = true;
             // b.SwitchColor = Color.YELLOW;
