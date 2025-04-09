@@ -80,7 +80,7 @@ public class Templates {
                 vy = -vy;
             }
 
-            Body b =Math.random()<0.01?new Body(x, y, vx, vy, 10.0E6, Color.WHITE):new StickyBody(x, y, vx, vy, 10.0E6, Color.WHITE);
+            Body b =Math.random()<0.1?new Body(x, y, vx, vy, 10.0E6, Color.WHITE):new StickyBody(x, y, vx, vy, 10.0E6, Color.WHITE);
             // b.overRiddenRadius = 1;
             bodies.add(b);
         }
@@ -343,13 +343,13 @@ public class Templates {
             double vx =  -Math.sin(theta);
             double vy =  Math.cos(theta);
             
-            double mass = 10.0E6+rand.nextGaussian()*0.0001+(rand.nextDouble()<0.001?10E10:0);
+            double mass = 10.0E4+rand.nextGaussian()*0.0001+(rand.nextDouble()<0.001?10E10:0);
             StickyBody b = new StickyBody(x, y, vx, vy, mass, Color.WHITE);
             bodies.add(b);
             
         }
 
-        for (int i = 0; i < nSatellites/200; i++) {
+        for (int i = 0; i < nSatellites/10; i++) {
             double theta = 2 * Math.PI * rand.nextDouble();
             double radius = rings[i % nrings]*(1+randomDistribution[i]/60);
             double x = radius * Math.cos(theta)+SUN1.getX();
@@ -358,7 +358,7 @@ public class Templates {
             double vx =  -Math.sin(theta);
             double vy =  Math.cos(theta);
             
-            double mass = 10.0E6+rand.nextGaussian()*0.0001+(rand.nextDouble()<0.001?10E10:0);
+            double mass = 10.0E4+rand.nextGaussian()*0.0001+(rand.nextDouble()<0.001?10E10:0);
             Body b = new Body(x, y, vx, vy, mass, Color.WHITE);
             bodies.add(b);
         }
