@@ -11,8 +11,8 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Locale;
-
 import javax.swing.*;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -21,7 +21,9 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
     public static final int HEIGHT = 800;
     private Timer timer;
     public List<Body> bodies;
+    public double addBodyMass; // mass of the body to be added when mouse is released
     public boolean running = true;
+    private double dt; // time step for the simulation
     
     // need for drawing tree and making text
     Tree tree;
@@ -32,16 +34,20 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
 
     // need for drawing arrows for adding particles through GUI
     private Point startPoint = null;
-    private boolean drawingArrow = false;    
+    private boolean drawingArrow = false;
+    
 
-    public Window(List<Body> bodies, double fps) {
-        this.timer = new Timer(utils.framesPerSecondToMillisecondsPerFrame(fps), this); // Roughly 60 FPS
+    public Window(List<Body> bodies, double fps,double addBodyMass,double dt) {
+        this.timer = new Timer(utils.framesPerSecondToMillisecondsPerFrame(fps), this);
         this.bodies = bodies;
         this.lastTime = System.currentTimeMillis();
+        this.addBodyMass = addBodyMass;
+        this.dt = dt;
         addMouseListener(this);
     }
 
     protected abstract void updatePhysics();
+    protected abstract void reCenter(); // recenter the simulation to the center of the screen
 
     public void simulate() {
         JFrame frame = new JFrame(ResourceBundle.getBundle("resources.messages", Locale.getDefault()).getString("window.title"));
@@ -123,6 +129,10 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
     // MouseListener methods
     @Override
     public void mousePressed(MouseEvent e) {
+        // check for left mouse button
+        if (e.getButton() != MouseEvent.BUTTON1) {
+            return;
+        }
         startPoint = e.getPoint();
         drawingArrow = true;
         repaint();
@@ -130,22 +140,30 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
     
     @Override
     public void mouseReleased(MouseEvent e) {
-        // endPoint = e.getPoint();
+        if(this.startPoint == null||e.getButton() != MouseEvent.BUTTON1) {
+            return;
+        }
         drawingArrow = false;
         repaint();
         // add mew body here
         double x,y,vx,vy;
         x = startPoint.x;
         y = startPoint.y;
-        vx = (double)(-e.getX()+startPoint.x)/10;
-        vy = (double)(-e.getY()+startPoint.y)/10;
-        Body b = new Body(x,y,vx,vy,5.0,Color.WHITE);
+        vx = (double)(-e.getX()+startPoint.x)/(10*this.dt);
+        vy = (double)(-e.getY()+startPoint.y)/(10*this.dt);
+        Body b = new StickyBody(x,y,vx,vy,addBodyMass,Color.WHITE);
         b.overRiddenRadius = 5;
         // b.elastic = 0.5;
         this.bodies.add(b);
     }
     
-    @Override public void mouseClicked(MouseEvent e) { }
+    @Override public void mouseClicked(MouseEvent e) {
+        // recenter on right-double click
+        if (e.getButton() == MouseEvent.BUTTON3 && e.getClickCount() == 2) {
+            System.out.println("reCenter");
+            this.reCenter();
+        }
+     }
     @Override public void mouseEntered(MouseEvent e) { }
     @Override public void mouseExited(MouseEvent e) { }
 }

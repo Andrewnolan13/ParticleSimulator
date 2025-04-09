@@ -3,6 +3,7 @@ import java.awt.*;
 import java.util.Locale;
 
 public class GUI {
+    
     public static void main(String[] args) {
         Locale.setDefault(Locale.ENGLISH);
         SwingUtilities.invokeLater(GUI::createAndShowGUI);
@@ -12,7 +13,7 @@ public class GUI {
     private static void createAndShowGUI() {
         JFrame frame = new JFrame("Simulation GUI");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(400, 300);
+        frame.setSize(500, 300);
         
         JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(3, 2, 10, 10));

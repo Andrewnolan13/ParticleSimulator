@@ -8,8 +8,8 @@ import java.util.concurrent.Executors;
 
 
 public class Simulation extends Window{
-    public static final int WIDTH = 800;
-    public static final int HEIGHT = 800;
+    // public static final int WIDTH = 1000;
+    // public static final int HEIGHT = 800;
 
     private double dt;
     private Double Theta;
@@ -22,19 +22,24 @@ public class Simulation extends Window{
     public boolean sortBodiesByMorton = false;
     public boolean parallel = true;
     public boolean oneLoop = false;
+    public boolean prune = false;
 
     private Double localGravity = null;
     private String algorithm = "Barnes-Hut";
 
-    public ExecutorService executor = Executors.newFixedThreadPool(8);
+    public ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-    public Simulation(List<Body> bodies, double dt, Double Theta, double fps) {
-        super(bodies,fps);
+    public Simulation(List<Body> bodies, double dt, Double Theta, double fps, double addBodyMass) {
+        super(bodies,fps,addBodyMass, dt);
         this.dt = dt;
         this.Theta = Theta;
-        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "8");
         // show statistics
         Statistics.print(this);
+        System.out.println("Number of cores: " + Runtime.getRuntime().availableProcessors());
+    }
+
+    public Simulation(List<Body> bodies, double dt, Double Theta, double fps) {
+        this(bodies, dt, Theta, fps, 5.0);
     }
 
     public Simulation(List<Body> bodies, double dt, Double Theta) {
@@ -66,7 +71,9 @@ public class Simulation extends Window{
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            // this.updateOneLoop();
+            if (this.prune){
+                this.pruneBodies();
+            }
             return;
         }
         // update the gravitational force field
@@ -203,7 +210,7 @@ public class Simulation extends Window{
                 // System.out.println("local gravity " + this.localGravity+"\n"+body.getMass()*this.localGravity);
                 body.addForce(0, this.localGravity*body.getMass());}}}
 
-    private void reCenter(){
+    protected void reCenter(){
         double offset = 0;
         double _com_x = 0;
         double _com_y = 0;
@@ -281,45 +288,28 @@ public class Simulation extends Window{
         // gravity
         // collsions
         // wall collisions
+        double com_x = 0;
+        double com_y = 0;
 
-        // (this.parallel?this.bodies.parallelStream():this.bodies.stream()).forEach(body -> {
-        //     // gravity
-        //     if(this.graviationalForceField){
-        //         this.tree.updateForce(body);}
-        //     // collisions
-        //     if(this.interParticleCollisions){
-        //         this.tree.updateCollisions(body, this.collisionThreshold);}
-        //     // wall collisions
-        //     if(this.wallCollisions){
-        //         double x = body.getX();
-        //         double y = body.getY();
-        //         double vx = body.getVx();
-        //         double vy = body.getVy();
-        //         double r = body.scaledRadius();
-        //         double correctDirection = 0;
-        //         int width = this.getWidth();
-        //         int height = this.getHeight();
-        //         if(x - r < 0 || x + r > width){
-        //             correctDirection = x - r< 0 ? 1 : -1; 
-        //             vx = correctDirection*Math.abs(vx)*body.elastic;
-        //             x = x - r < 0 ? r+1 : width-r-1;
-        //         }if(y - r < 0 || y + r > height){
-        //             correctDirection = y - r < 0 ? 1 : -1;
-        //             vy = correctDirection*Math.abs(vy)*body.elastic;
-        //             y = y - r < 0 ? r+1 : height-r-1;
-        //         }
-        //         body.setPosition(x, y);
-        //         body.setVelocity(vx, vy);                
-        //     }
+        if(this.reCenter){
+            double offset = 0;
+            double _com_x = 0;
+            double _com_y = 0;
+            double total_mass = 0;
+            for(Body body:this.bodies){
+                offset = Math.max(body.scaledRadius(), offset);
+                _com_x += body.getX()*body.getMass();
+                _com_y += body.getY()*body.getMass();
+                total_mass += body.getMass();
+            }
+            com_x = _com_x / total_mass+offset;
+            com_y = _com_y / total_mass+offset;
+        }
 
-        //     // 
-        //     body.update(this.dt);
-        //     body.resetForce();
-
-        // });
-        // System.out.println("updateOneLoop()");
-
+        // not alot of freedom with this one, but it's faster so is reserved for big sims.
         for (Body body : this.bodies) {
+            final double com_x_ = com_x;
+            final double com_y_ = com_y;
             executor.submit(() -> {
                 if (this.graviationalForceField){
                     this.tree.updateForce(body);
@@ -347,17 +337,27 @@ public class Simulation extends Window{
                     }
                     body.setPosition(x, y);
                     body.setVelocity(vx, vy);     
-                    }
+                }
+                if (this.reCenter){
+                    body.setPosition(body.getX() - com_x_ + this.getWidth()/2, body.getY() - com_y_ + this.getHeight()/2);
+                }
                 body.update(this.dt);
-                // body.update(Math.max((double) 5.0/this.fps, this.dt));
                 body.resetForce();
             });
         }
         
+        // initially, I would let the executor shutdown, which will give an accurate simulation.
+        // But if I don't shut it down, I don't have the overhead of recreating a new executor every time.
+        // Downside is that more jobs get pushed to it while it's still working, so it can lead to some weird behavior.
+
         // executor.shutdown();
         // executor.awaitTermination(1, TimeUnit.MINUTES);
         // executor.
                  
+    }
+
+    public void pruneBodies(){
+        this.bodies.removeIf(body -> body.getMass() <= Body.EPSILON);
     }
 
 }

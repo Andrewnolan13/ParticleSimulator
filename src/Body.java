@@ -187,10 +187,11 @@ public sealed class Body permits StickyBody{
     public void draw(Graphics g){
         int posX = (int) Math.round(this.rx);
         int posY = (int) Math.round(this.ry);
-        Color _color = (this.changeColorOnCollision && this.collided) ? this.SwitchColor : this.color;
+        int r = this.scaledRadius();
+        // Color _color = (this.changeColorOnCollision && this.collided) ? this.SwitchColor : this.color;
 
-        g.setColor(_color);
-        g.fillOval(posX - this.scaledRadius(), posY - this.scaledRadius(), 2 * this.scaledRadius(), 2 * this.scaledRadius());
+        g.setColor((this.changeColorOnCollision && this.collided) ? this.SwitchColor : this.color);
+        g.fillOval(posX - r, posY - r, 2 * r, 2 * r);
         this.collided = false;
 
     }
