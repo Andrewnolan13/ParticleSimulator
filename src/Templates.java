@@ -67,20 +67,20 @@ public class Templates {
 
         // add in 1000 particles in a circle around the sun, orbiting the sun, each of mass 0.00000001
         // 1% of them are non-sticky, 99% are sticky.
-        for (int i = 0; i < 100_000; i++) {
+        for (int i = 0; i < 1_000_000; i++) {
             double theta = 2 * Math.PI * i / 1000;
             double r = 100 + Math.random() * 500;
             double x = r * Math.cos(theta) + xcm;
             double y = r * Math.sin(theta) + ycm;
             double vx = -Math.sin(theta) * Math.sqrt(bodies.get(0).G * totalMass / r);
             double vy = Math.cos(theta) * Math.sqrt(bodies.get(0).G * totalMass / r);
-            boolean switchDirection = Math.random() < 0.95;
+            boolean switchDirection = Math.random() < 0.05;
             if (switchDirection) {
                 vx = -vx;
                 vy = -vy;
             }
 
-            Body b =Math.random()<0.1?new Body(x, y, vx, vy, 10.0E6, Color.WHITE):new StickyBody(x, y, vx, vy, 10.0E6, Color.WHITE);
+            Body b =Math.random()<0.005?new Body(x, y, vx, vy, 10.0E6, Color.WHITE):new StickyBody(x, y, vx, vy, 10.0E6, Color.WHITE);
             // b.overRiddenRadius = 1;
             bodies.add(b);
         }
@@ -96,6 +96,7 @@ public class Templates {
         sim.interParticleCollisions = true;
         sim.graviationalForceField = true;
         sim.reCenter = false;
+        sim.drawTree = false;
         sim.simulate();        
 
     }
