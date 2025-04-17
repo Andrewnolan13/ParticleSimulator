@@ -166,7 +166,7 @@ public class Templates {
         bodies.add(Ball);
         Ball.elastic = 1.0;
 
-        int numBodies = 10000;
+        int numBodies = 20_000;
         double mass =1.0/numBodies;
         int overRiddenRadius = 1;
         double x = 0;
