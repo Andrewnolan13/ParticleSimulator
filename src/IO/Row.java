@@ -3,7 +3,7 @@ package IO;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class Row implements Iterable<Object> {
+final public class Row extends DataFrameSubClass<Object> {
     public Object[] values;
     public String[] columnNames;
     private HashMap<String, Object> map = new HashMap<>();

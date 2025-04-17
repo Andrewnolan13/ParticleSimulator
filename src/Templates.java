@@ -1,24 +1,15 @@
 import java.util.*;
+import javax.swing.JCheckBox;
 import java.awt.Color;
-import java.awt.Graphics;
 import java.nio.file.Path;
 
 import IO.*;
 
 public class Templates {
-    public static void main(String[] args) {
-        // System.out.println("Hello, World!");
-        // galaxyCollision(false,true);
-        // galaxy(false,true);
-        // galaxyCollision(true,true);
-        ballThroughDust(true);
-        // windStream();
-        // dropTest();
-        // fluid();  
-    }
-    public static void solarSystem(){
+
+    public static void solarSystem(JCheckBox drawQuadTree, JCheckBox StickyCollisions){
         Path filePath = TextFileReader.sourceDirectory();
-        filePath = filePath.resolve("../data/SolarSystem.txt");
+        filePath = filePath.resolve("data/SolarSystem.txt");
         TextFileReader reader = new TextFileReader();
         reader.read(filePath);
         
@@ -87,7 +78,7 @@ public class Templates {
 
 
 
-        Simulation sim = new Simulation(bodies, 0.0000000000001,Double.POSITIVE_INFINITY,60.0,10.0E8);
+        Simulation sim = new Simulation(bodies, 0.0000000000001,Double.POSITIVE_INFINITY,60.0,10.0E8,drawQuadTree, StickyCollisions);
         sim.fps = 60.0;
         sim.oneLoop = true;
         sim.prune = true;
@@ -100,7 +91,8 @@ public class Templates {
         sim.simulate();        
 
     }
-    public static void fluid(){
+    
+    public static void fluid(JCheckBox drawQuadTree, JCheckBox StickyCollisions){
         List<Body> bodies = new ArrayList<>();
 
         int numBodies = 5000;
@@ -125,7 +117,7 @@ public class Templates {
             }
         }
 
-        Simulation sim = new Simulation(bodies, 0.1,Double.POSITIVE_INFINITY);
+        Simulation sim = new Simulation(bodies, 0.1,Double.POSITIVE_INFINITY,drawQuadTree, StickyCollisions);
         sim.collisionThreshold = 50;
         sim.interParticleCollisions = true;
         sim.graviationalForceField = false;
@@ -135,7 +127,7 @@ public class Templates {
         
     }
 
-    public static void dropTest(){
+    public static void dropTest(JCheckBox drawQuadTree, JCheckBox StickyCollisions){
         // really boring, just two balls falling down. One has bigger mass than the other. 
         // the should accelerate at the same rate.
         List<Body> bodies = new ArrayList<>();
@@ -147,7 +139,7 @@ public class Templates {
         b2.elastic = 0.9;
         bodies.add(b1);
         bodies.add(b2);
-        Simulation sim = new Simulation(bodies, 1, Double.POSITIVE_INFINITY);
+        Simulation sim = new Simulation(bodies, 1, Double.POSITIVE_INFINITY,drawQuadTree, StickyCollisions);
         sim.setLocalGravity(0.6);
         sim.wallCollisions = true;
         sim.graviationalForceField = false;
@@ -156,7 +148,8 @@ public class Templates {
         sim.simulate();
 
     } 
-    public static void windStream() {
+    
+    public static void windStream(JCheckBox drawQuadTree, JCheckBox StickyCollisions) {
         // 50k particles moving from left to right. There is a ball in the middle.
         //Ball has radius 10. So the stream should have height 20.
 
@@ -197,7 +190,7 @@ public class Templates {
             }     
         }
 
-        Simulation sim = new Simulation(bodies, .1, Double.POSITIVE_INFINITY,1000);
+        Simulation sim = new Simulation(bodies, .1, Double.POSITIVE_INFINITY,1000,drawQuadTree, StickyCollisions);
         sim.interParticleCollisions = true;
         sim.graviationalForceField = false;
         sim.reCenter = false;
@@ -208,7 +201,8 @@ public class Templates {
         sim.simulate();
 
     }
-    public static void ballThroughDust(boolean parallel) {
+
+    public static void ballThroughDust(JCheckBox drawQuadTree, JCheckBox StickyCollisions) {
         // Ball flying through 50k particles. Good one to watch tbh.
 
         List<Body> bodies = new ArrayList<>();
@@ -237,21 +231,17 @@ public class Templates {
         }
         
         System.out.println("Bodies: " + bodies.size());
-        Simulation sim = new Simulation(bodies, 0.50,Double.POSITIVE_INFINITY,60);
+        Simulation sim = new Simulation(bodies, 0.50,Double.POSITIVE_INFINITY,60,drawQuadTree,StickyCollisions);
         sim.interParticleCollisions = true;
         sim.graviationalForceField = false;
         sim.oneLoop = true;
         sim.wallCollisions = true;
-        sim.parallel = parallel;
+        sim.parallel = true;
         sim.sortBodiesByMorton = false;
         sim.simulate();
     }
 
-
-
-
-
-    public static void galaxyCollision(boolean sortBodiesByMorton, boolean parallel) {
+    public static void galaxyCollision(JCheckBox drawQuadTree, JCheckBox StickyCollisions) {
         //set random seed
 
         List<Body> bodies = new ArrayList<>();
@@ -262,7 +252,7 @@ public class Templates {
         double widthFactor = Math.min(Simulation.WIDTH / 2.0, Simulation.HEIGHT / 2.0);
         double[] rings = {widthFactor * 0.33, widthFactor * 0.40, widthFactor * 0.50};
         
-        int nSatellites = 5000;
+        int nSatellites = 15000;
         int nrings = rings.length;
         Random rand = new Random();
         rand.setSeed(0);
@@ -307,16 +297,16 @@ public class Templates {
             bodies.add(b);
         }
         
-        Simulation sim = new Simulation(bodies, 0.5);
-        sim.fps = 6000000000.0;
+        Simulation sim = new Simulation(bodies, 0.5,drawQuadTree, StickyCollisions);
+        sim.fps = 60.0;
         sim.oneLoop = true;
-        sim.sortBodiesByMorton = sortBodiesByMorton;
-        sim.parallel = parallel;
+        sim.sortBodiesByMorton = false;
+        sim.parallel = true;
         sim.graviationalForceField = true;
         sim.simulate();
     }
 
-    public static void galaxy(boolean sortBodiesByMorton, boolean parallel) {
+    public static void galaxy(JCheckBox drawQuadTree, JCheckBox StickyCollisions) {
         //set random seed
 
         List<Body> bodies = new ArrayList<>();
@@ -391,8 +381,8 @@ public class Templates {
             b.setVelocity(vx, vy);
         }
         
-        Simulation sim = new Simulation(bodies, 0.0000000001,Double.POSITIVE_INFINITY,60);
-
+        Simulation sim = new Simulation(bodies, 0.0000000001,Double.POSITIVE_INFINITY,60,drawQuadTree, StickyCollisions);
+        
         StickyBody Planet = new StickyBody(600, 400, 0, 0, 10E24, new Color(0,255,0));
         double v = (double) Math.sqrt(SUN1.G * totalMass/ Math.pow(Planet.distanceTo(SUN1), 1)); 
         Planet.setVelocity(0,-v);

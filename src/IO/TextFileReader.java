@@ -31,7 +31,7 @@ public class TextFileReader {
     }
     public static void main(String[] args) {
         Path filePath = sourceDirectory();
-        filePath = filePath.resolve("../data/SolarSystem.txt");
+        filePath = filePath.resolve("data/SolarSystem.txt");
         TextFileReader reader = new TextFileReader();
         reader.read(filePath);
         

@@ -35,14 +35,20 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
     // need for drawing arrows for adding particles through GUI
     private Point startPoint = null;
     private boolean drawingArrow = false;
+
+    // user interactivy while sim runs
+    public JCheckBox drawQuadTree;
+    public JCheckBox StickyCollisions;
     
 
-    public Window(List<Body> bodies, double fps,double addBodyMass,double dt) {
+    public Window(List<Body> bodies, double fps,double addBodyMass,double dt,JCheckBox drawQuadTree, JCheckBox StickyCollisions) {
         this.timer = new Timer(utils.framesPerSecondToMillisecondsPerFrame(fps), this);
         this.bodies = bodies;
         this.lastTime = System.currentTimeMillis();
         this.addBodyMass = addBodyMass;
         this.dt = dt;
+        this.drawQuadTree = drawQuadTree;
+        this.StickyCollisions = StickyCollisions;
         addMouseListener(this);
     }
 
@@ -83,7 +89,6 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
         super.paintComponent(g);
         
         // Set background color to black
-        // Graphics2D g = (Graphics2D) g;
         g.setColor(Color.BLACK);
         g.fillRect(0, 0, getWidth(), getHeight());
     
@@ -93,7 +98,7 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
         g.drawString(MessageFormat.format(ResourceBundle.getBundle("resources.messages", Locale.getDefault()).getString("total.bodies"), (int)(this.tree!=null?this.tree.numBodies:this.bodies.size())), 10, 40);
         g.drawString(MessageFormat.format(ResourceBundle.getBundle("resources.messages", Locale.getDefault()).getString("date.time"), LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))), 10, 60);
         // Draw the tree
-        if (this.drawTree&&this.tree != null) {
+        if (this.drawQuadTree.isSelected()&&this.tree != null) {
             this.tree.draw(g);
         }
         // Draw bodies
@@ -151,7 +156,7 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
         y = startPoint.y;
         vx = (double)(-e.getX()+startPoint.x)/(10*this.dt);
         vy = (double)(-e.getY()+startPoint.y)/(10*this.dt);
-        Body b = new StickyBody(x,y,vx,vy,addBodyMass,Color.WHITE);
+        Body b = this.StickyCollisions.isSelected()?new StickyBody(x,y,vx,vy,addBodyMass,Color.WHITE):new Body(x,y,vx,vy,addBodyMass,Color.WHITE);
         b.overRiddenRadius = 5;
         // b.elastic = 0.5;
         this.bodies.add(b);

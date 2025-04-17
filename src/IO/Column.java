@@ -4,7 +4,7 @@ import java.util.Iterator;
 /*
  * allow int and double only
  */
-public class Column<T extends Number> implements Iterable<T>{
+final public class Column<T extends Number> extends DataFrameSubClass<T> {
     public String name;
     public T[] values;
 

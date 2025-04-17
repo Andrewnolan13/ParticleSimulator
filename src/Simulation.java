@@ -4,7 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-// import java.util.concurrent.TimeUnit;
+import javax.swing.JCheckBox;
 
 
 public class Simulation extends Window{
@@ -29,8 +29,8 @@ public class Simulation extends Window{
 
     public ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-    public Simulation(List<Body> bodies, double dt, Double Theta, double fps, double addBodyMass) {
-        super(bodies,fps,addBodyMass, dt);
+    public Simulation(List<Body> bodies, double dt, Double Theta, double fps, double addBodyMass,JCheckBox drawQuadTree,JCheckBox StickyCollisions) {
+        super(bodies,fps,addBodyMass, dt,drawQuadTree, StickyCollisions);
         this.dt = dt;
         this.Theta = Theta;
         // show statistics
@@ -38,15 +38,17 @@ public class Simulation extends Window{
         System.out.println("Number of cores: " + Runtime.getRuntime().availableProcessors());
     }
 
-    public Simulation(List<Body> bodies, double dt, Double Theta, double fps) {
-        this(bodies, dt, Theta, fps, 5.0);
+    public Simulation(List<Body> bodies, double dt, Double Theta, double fps,JCheckBox drawQuadTree,JCheckBox StickyCollisions) {
+        this(bodies, dt, Theta, fps, 5.0,drawQuadTree, StickyCollisions);
     }
 
-    public Simulation(List<Body> bodies, double dt, Double Theta) {
-        this(bodies, dt, Theta, 60);}
+    public Simulation(List<Body> bodies, double dt, Double Theta,JCheckBox drawQuadTree,JCheckBox StickyCollisions) {
+        this(bodies, dt, Theta, 60, drawQuadTree, StickyCollisions);
+    }
 
-    public Simulation(List<Body> bodies, double dt) {
-        this(bodies, dt, Double.POSITIVE_INFINITY);}
+    public Simulation(List<Body> bodies, double dt,JCheckBox drawQuadTree,JCheckBox StickyCollisions) {
+        this(bodies, dt, Double.POSITIVE_INFINITY,drawQuadTree, StickyCollisions);
+    }
 
     protected void updatePhysics() {
 
@@ -349,6 +351,7 @@ public class Simulation extends Window{
         // initially, I would let the executor shutdown, which will give an accurate simulation.
         // But if I don't shut it down, I don't have the overhead of recreating a new executor every time.
         // Downside is that more jobs get pushed to it while it's still working, so it can lead to some weird behavior.
+        // upside is that the animations are still beautiful and smooth to the naked eye, while imrpoving FPS.
 
         // executor.shutdown();
         // executor.awaitTermination(1, TimeUnit.MINUTES);
