@@ -71,7 +71,7 @@ public class Templates {
                 vy = -vy;
             }
 
-            Body b =Math.random()<0.005?new Body(x, y, vx, vy, 10.0E6, Color.WHITE):new StickyBody(x, y, vx, vy, 10.0E6, Color.WHITE);
+            Body b =Math.random()<0.000?new Body(x, y, vx, vy, 10.0E6, Color.WHITE):new StickyBody(x, y, vx, vy, 10.0E6, Color.WHITE);
             // b.overRiddenRadius = 1;
             bodies.add(b);
         }

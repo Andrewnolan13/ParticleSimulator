@@ -1,7 +1,6 @@
 package IO;
 
 import java.util.HashMap;
-import java.util.Iterator;
 
 final public class Row extends DataFrameSubClass<Object> {
     public Object[] values;
@@ -29,20 +28,4 @@ final public class Row extends DataFrameSubClass<Object> {
         return sb.toString();
     }
 
-    @Override
-    public Iterator<Object> iterator() {
-        return new Iterator<Object>() {
-            private int index = 0;
-
-            @Override
-            public boolean hasNext() {
-                return index < values.length;
-            }
-
-            @Override
-            public Object next() {
-                return values[index++];
-            }
-        };
-    }
 }

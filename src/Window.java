@@ -16,7 +16,7 @@ import javax.swing.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public abstract class Window extends JPanel implements ActionListener, MouseListener  {
+public abstract class Window extends JPanel implements ActionListener, MouseListener, MouseMotionListener  {
     public static final int WIDTH = 800;
     public static final int HEIGHT = 800;
     private Timer timer;
@@ -50,6 +50,7 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
         this.drawQuadTree = drawQuadTree;
         this.StickyCollisions = StickyCollisions;
         addMouseListener(this);
+        addMouseMotionListener(this);
     }
 
     protected abstract void updatePhysics();
@@ -135,14 +136,33 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
     @Override
     public void mousePressed(MouseEvent e) {
         // check for left mouse button
-        if (e.getButton() != MouseEvent.BUTTON1) {
-            return;
-        }
         startPoint = e.getPoint();
-        drawingArrow = true;
-        repaint();
+        if (e.getButton() == MouseEvent.BUTTON1) {
+            drawingArrow = true;
+            repaint();
+        }
     }
-    
+
+    @Override
+    public void mouseDragged(MouseEvent e){
+        // System.out.println("mouse dragged");
+        // System.out.println(e.getButton());
+        if(SwingUtilities.isRightMouseButton(e)){
+            startPoint = startPoint==null?e.getPoint():startPoint;
+            drawingArrow = true;
+            repaint();
+
+            double x,y,vx,vy;
+            x = startPoint.x;
+            y = startPoint.y;
+            vx = (double)(-e.getX()+startPoint.x)/(10*this.dt);
+            vy = (double)(-e.getY()+startPoint.y)/(10*this.dt);
+            Body b = this.StickyCollisions.isSelected()?new StickyBody(x,y,vx,vy,addBodyMass,Color.WHITE):new Body(x,y,vx,vy,addBodyMass,Color.WHITE);
+            b.overRiddenRadius = 2;
+            this.bodies.add(b);            
+            repaint();
+        }
+    }
     @Override
     public void mouseReleased(MouseEvent e) {
         if(this.startPoint == null||e.getButton() != MouseEvent.BUTTON1) {
@@ -171,6 +191,9 @@ public abstract class Window extends JPanel implements ActionListener, MouseList
      }
     @Override public void mouseEntered(MouseEvent e) { }
     @Override public void mouseExited(MouseEvent e) { }
+    @Override public void mouseMoved(MouseEvent e){
+
+    }
 }
     
 

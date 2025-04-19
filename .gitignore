@@ -1,2 +1,6 @@
 *.ipynb linguist-vendored 
 *.mp4
+*.mkv
+/archive
+.idea
+.vscode

@@ -1,6 +1,5 @@
 package IO;
 
-import java.util.Iterator;
 /*
  * allow int and double only
  */
@@ -21,23 +20,6 @@ final public class Column<T extends Number> extends DataFrameSubClass<T> {
                 throw new IllegalArgumentException("Unsupported type: " + type.getName());
             }
         }
-    }
-
-    @Override
-    public Iterator<T> iterator() {
-        return new Iterator<T>() {
-            private int index = 0;
-
-            @Override
-            public boolean hasNext() {
-                return index < values.length;
-            }
-
-            @Override
-            public T next() {
-                return values[index++];
-            }
-        };
     }
 
 }
